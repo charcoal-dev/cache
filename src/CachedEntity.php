@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Charcoal\Cache;
 
 use Charcoal\Buffers\Frames\Bytes20;
+use Charcoal\Cache\Exception\CachedEntityError;
 use Charcoal\Cache\Exception\CachedEntityException;
 
 /**
@@ -59,11 +60,11 @@ class CachedEntity
     public function verifyChecksum(): void
     {
         if (!$this->checksum) {
-            throw new CachedEntityException(CachedEntityException::CHECKSUM_NOT_STORED);
+            throw new CachedEntityException(CachedEntityError::CHECKSUM_NOT_STORED);
         }
 
         if (!$this->checksum->equals(hash_hmac("sha1", $this->value, $this->key, true))) {
-            throw new CachedEntityException(CachedEntityException::BAD_CHECKSUM);
+            throw new CachedEntityException(CachedEntityError::BAD_CHECKSUM);
         }
     }
 
@@ -76,7 +77,7 @@ class CachedEntity
         if ($this->ttl) {
             $epoch = time();
             if ($this->ttl > $epoch || ($epoch - $this->storedOn) >= $this->ttl) {
-                throw new CachedEntityException(CachedEntityException::IS_EXPIRED);
+                throw new CachedEntityException(CachedEntityError::IS_EXPIRED);
             }
         }
 
@@ -86,7 +87,7 @@ class CachedEntity
 
         $obj = unserialize($this->value);
         if (!$obj) {
-            throw new CachedEntityException(CachedEntityException::UNSERIALIZE_FAIL);
+            throw new CachedEntityException(CachedEntityError::UNSERIALIZE_FAIL);
         }
 
         return $obj;

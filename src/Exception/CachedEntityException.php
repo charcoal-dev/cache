@@ -20,19 +20,17 @@ namespace Charcoal\Cache\Exception;
  */
 class CachedEntityException extends CacheException
 {
-    public const IS_EXPIRED = 0x64;
-    public const BAD_BYTES = 0xc8;
-    public const UNSERIALIZE_FAIL = 0x12c;
-    public const CHECKSUM_NOT_STORED = 0x190;
-    public const BAD_CHECKSUM = 0x1f4;
-
     /**
-     * @param int $code
+     * @param \Charcoal\Cache\Exception\CachedEntityError $error
      * @param string $msg
      * @param \Throwable|null $previous
      */
-    public function __construct(int $code = 0, string $msg = "", ?\Throwable $previous = null)
+    public function __construct(
+        public readonly CachedEntityError $error,
+        string                            $msg = "",
+        ?\Throwable                       $previous = null
+    )
     {
-        parent::__construct($msg, $code, $previous);
+        parent::__construct($msg, $this->error->value, $previous);
     }
 }

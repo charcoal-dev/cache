@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Charcoal\Cache;
 
 use Charcoal\Buffers\Frames\Bytes20;
+use Charcoal\Cache\Exception\CachedEntityError;
 use Charcoal\Cache\Exception\CachedEntityException;
 use Charcoal\Cache\Exception\CacheDriverException;
 
@@ -109,7 +110,7 @@ class Cache
         try {
             return $stored->getStoredItem();
         } catch (CachedEntityException $e) {
-            if ($e->getCode() === CachedEntityException::IS_EXPIRED) {
+            if ($e->error === CachedEntityError::IS_EXPIRED) {
                 if ($this->deleteIfExpired) {
                     try {
                         $this->delete($key);
@@ -231,7 +232,7 @@ class Cache
         $cachedEntity = unserialize(rtrim(base64_decode(substr($stored, $this->serializePrefixLen))));
         if (!$cachedEntity instanceof CachedEntity) {
             throw new CachedEntityException(
-                CachedEntityException::BAD_BYTES,
+                CachedEntityError::BAD_BYTES,
                 "Could not restore serialized CachedEntity object"
             );
         }
