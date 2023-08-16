@@ -1,0 +1,26 @@
+{
+  "name": "charcoal-dev/cache",
+  "description": "Cache lib for Charcoal Apps",
+  "type": "library",
+  "homepage": "https://github.com/charcoal-dev/cache",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Furqan A. Siddiqui",
+      "email": "hello@furqansiddiqui.com",
+      "homepage": "https://www.furqansiddiqui.com",
+      "role": "Author"
+    }
+  ],
+  "require": {
+    "php": "^8.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Charcoal\\Cache\\": [
+        "src"
+      ]
+    }
+  },
+  "minimum-stability": "dev"
+}
