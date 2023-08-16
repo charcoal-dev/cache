@@ -39,7 +39,7 @@ interface CacheDriverInterface
     /**
      * @return bool
      */
-    public function supportsPing(): bool;
+    public function metaPingSupported(): bool;
 
     /**
      * @return bool
