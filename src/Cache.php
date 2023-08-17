@@ -25,7 +25,7 @@ use Charcoal\Cache\Exception\CacheDriverException;
  */
 class Cache
 {
-    protected readonly int $serializePrefixLen;
+    public readonly int $serializePrefixLen;
 
     /**
      * @param \Charcoal\Cache\CacheDriverInterface $storageDriver
@@ -57,19 +57,10 @@ class Cache
      */
     public function set(string $key, mixed $value, ?int $ttl = null, ?bool $createChecksum = null): bool|Bytes20
     {
-        if (!$value instanceof CachedEntity) {
-            $value = $this->encodeValue($key, $value, $createChecksum ?? $this->useChecksumsByDefault, $ttl);
-        }
-
+        $value = CachedEntity::Prepare($this, $key, $value, $createChecksum ?? $this->useChecksumsByDefault, $ttl);
         if ($value instanceof CachedEntity) {
             $checksum = $value->checksum;
-            $value = serialize($value);
-            $nullBytesReq = $this->plainStringsMaxLength - strlen($value);
-            if ($nullBytesReq > 0) {
-                $value .= str_repeat("\0", $nullBytesReq);
-            }
-
-            $value = $this->serializedEntityPrefix . base64_encode($value);
+            $value = CachedEntity::Serialize($this, $value);
         }
 
         $this->storageDriver->store($key, $value, $ttl);
@@ -79,18 +70,25 @@ class Cache
     /**
      * @param string $key
      * @param bool $returnCachedEntity
+     * @param bool $expectInteger
      * @param bool|null $verifyChecksum
      * @return int|string|array|object|bool|null
-     * @throws \Charcoal\Cache\Exception\CacheException
+     * @throws \Charcoal\Cache\Exception\CacheDriverOpException
+     * @throws \Charcoal\Cache\Exception\CachedEntityException
      */
-    public function get(string $key, bool $returnCachedEntity = false, ?bool $verifyChecksum = null): int|string|null|array|object|bool
+    public function get(
+        string $key,
+        bool   $returnCachedEntity = false,
+        bool   $expectInteger = false,
+        ?bool  $verifyChecksum = null
+    ): int|string|null|array|object|bool
     {
         $stored = $this->storageDriver->resolve($key);
         if (!is_string($stored)) {
             return $stored;
         }
 
-        $stored = $this->decodeValue($stored);
+        $stored = CachedEntity::Restore($this, $stored, $expectInteger);
         if (!$stored instanceof CachedEntity) {
             return $stored;
         }
@@ -183,61 +181,6 @@ class Cache
     public function has(string $key): bool
     {
         return $this->storageDriver->isStored($key);
-    }
-
-    /**
-     * @param string $key
-     * @param mixed $value
-     * @param bool $createChecksum
-     * @param int|null $ttl
-     * @return int|string|\Charcoal\Cache\CachedEntity
-     */
-    protected function encodeValue(string $key, mixed $value, bool $createChecksum, ?int $ttl = null): int|string|CachedEntity
-    {
-        if ($createChecksum) { // when creating checksum, small strings and integers will be stored in CachedEntity
-            return new CachedEntity($key, $value, $ttl, true);
-        }
-
-        if (is_string($value) && strlen($value) <= $this->plainStringsMaxLength) {
-            return $value;
-        }
-
-        if (is_int($value)) {
-            return $value;
-        }
-
-        return new CachedEntity($key, $value, $ttl, false);
-    }
-
-    /**
-     * @param string $stored
-     * @param bool $expectInteger
-     * @return int|string|\Charcoal\Cache\CachedEntity
-     * @throws \Charcoal\Cache\Exception\CachedEntityException
-     */
-    protected function decodeValue(string $stored, bool $expectInteger = false): int|string|CachedEntity
-    {
-        if ($expectInteger && preg_match('/^-?\d+$/', $stored)) {
-            return intval($stored);
-        }
-
-        if (strlen($stored) <= $this->plainStringsMaxLength) {
-            return $stored;
-        }
-
-        if (!str_starts_with($stored, $this->serializedEntityPrefix)) {
-            return $stored;
-        }
-
-        $cachedEntity = unserialize(rtrim(base64_decode(substr($stored, $this->serializePrefixLen))));
-        if (!$cachedEntity instanceof CachedEntity) {
-            throw new CachedEntityException(
-                CachedEntityError::BAD_BYTES,
-                "Could not restore serialized CachedEntity object"
-            );
-        }
-
-        return $cachedEntity;
     }
 }
 

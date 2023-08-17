@@ -92,5 +92,82 @@ class CachedEntity
 
         return $obj;
     }
+
+    /**
+     * @param \Charcoal\Cache\Cache $cache
+     * @param string $key
+     * @param mixed $value
+     * @param bool $createChecksum
+     * @param int|null $ttl
+     * @return int|string|static
+     */
+    public static function Prepare(Cache $cache, string $key, mixed $value, bool $createChecksum, ?int $ttl = null): int|string|static
+    {
+        if ($value instanceof static) {
+            return $value;
+        }
+
+        if ($createChecksum) { // when creating checksum, small strings and integers will be stored in CachedEntity
+            return new static($key, $value, $ttl, true);
+        }
+
+        if (is_string($value) && strlen($value) <= $cache->plainStringsMaxLength) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return $value;
+        }
+
+        return new static($key, $value, $ttl, false);
+    }
+
+    /**
+     * @param \Charcoal\Cache\Cache $cache
+     * @param \Charcoal\Cache\CachedEntity $entity
+     * @return string
+     */
+    public static function Serialize(Cache $cache, CachedEntity $entity): string
+    {
+        $serialized = serialize($entity);
+        $nullBytesReq = $cache->plainStringsMaxLength - strlen($serialized);
+        if ($nullBytesReq > 0) {
+            $serialized .= str_repeat("\0", $nullBytesReq);
+        }
+
+        return $cache->serializedEntityPrefix . base64_encode($serialized);
+    }
+
+    /**
+     * @param \Charcoal\Cache\Cache $cache
+     * @param string $serialized
+     * @param bool $expectInteger
+     * @return int|string|static
+     * @throws \Charcoal\Cache\Exception\CachedEntityException
+     */
+    public static function Restore(Cache $cache, string $serialized, bool $expectInteger = false): int|string|static
+    {
+        if ($expectInteger && preg_match('/^-?\d+$/', $serialized)) {
+            return intval($serialized);
+        }
+
+        if (strlen($serialized) <= $cache->plainStringsMaxLength) {
+            return $serialized;
+        }
+
+        if (!str_starts_with($serialized, $cache->serializedEntityPrefix)) {
+            return $serialized;
+        }
+
+        $cachedEntity = unserialize(rtrim(base64_decode(substr($serialized, $cache->serializePrefixLen))));
+        if (!$cachedEntity instanceof static) {
+            throw new CachedEntityException(
+                CachedEntityError::BAD_BYTES,
+                "Could not restore serialized CachedEntity object"
+            );
+        }
+
+        return $cachedEntity;
+    }
 }
 
