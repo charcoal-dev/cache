@@ -19,9 +19,13 @@ class DumbCacheStore implements \Charcoal\Cache\CacheDriverInterface
 {
     private array $items = [];
 
+    public function __construct(public readonly int $salt = 0)
+    {
+    }
+
     public function metaUniqueId(): string
     {
-        return static::class;
+        return static::class . "_" . $this->salt;
     }
 
     public function isConnected(): bool
@@ -49,7 +53,7 @@ class DumbCacheStore implements \Charcoal\Cache\CacheDriverInterface
 
     public function store(string $key, int|string $value, ?int $ttl = null): void
     {
-        $this->items[$key] = $value;
+        $this->items[$key] = strval($value);
     }
 
     public function resolve(string $key): int|string|null|bool
