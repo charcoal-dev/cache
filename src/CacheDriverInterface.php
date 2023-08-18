@@ -37,6 +37,11 @@ interface CacheDriverInterface
     public function disconnect(): void;
 
     /**
+     * @return string
+     */
+    public function metaUniqueId(): string;
+
+    /**
      * @return bool
      */
     public function metaPingSupported(): bool;
