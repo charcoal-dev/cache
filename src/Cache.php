@@ -73,8 +73,7 @@ class Cache
      * @param bool $expectInteger
      * @param bool|null $verifyChecksum
      * @return int|string|array|object|bool|null
-     * @throws \Charcoal\Cache\Exception\CacheDriverOpException
-     * @throws \Charcoal\Cache\Exception\CachedEntityException
+     * @throws \Charcoal\Cache\Exception\CacheException
      */
     public function get(
         string $key,
