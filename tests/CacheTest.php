@@ -59,4 +59,43 @@ class CacheTest extends \PHPUnit\Framework\TestCase
         $this->assertNull($cacheStore->get("testItem"), "Return NULL but also delete the key");
         $this->assertFalse($cacheStore->has("testItem"));
     }
+
+    /**
+     * @return void
+     * @throws \Charcoal\Cache\Exception\CacheDriverOpException
+     * @throws \Charcoal\Cache\Exception\CacheException
+     * @throws \Charcoal\Cache\Exception\CachedEntityException
+     */
+    public function testChecksum(): void
+    {
+        $cacheStore = new \Charcoal\Cache\Cache(new DumbCacheStore());
+        $checksum = $cacheStore->set("test", "some-value", createChecksum: true);
+        $this->assertInstanceOf(\Charcoal\Buffers\Frames\Bytes20::class, $checksum);
+        /** @var \Charcoal\Cache\CachedEntity $value */
+        $value = $cacheStore->get("test", returnCachedEntity: true);
+        $this->assertEquals(20, $value->checksum->len());
+        $this->assertTrue($checksum->equals($value->checksum));
+    }
+
+    /**
+     * @return void
+     * @throws \Charcoal\Cache\Exception\CacheException
+     */
+    public function testNoChecksum(): void
+    {
+        $cacheStore = new Charcoal\Cache\Cache(new DumbCacheStore(), useChecksumsByDefault: false);
+        $set1 = $cacheStore->set("test", new ExampleModelA(1, "test", "test@test.com", new ExampleModelB("a", "b")));
+        $this->assertIsBool($set1);
+    }
+
+    /**
+     * @return void
+     * @throws \Charcoal\Cache\Exception\CacheException
+     */
+    public function testChecksumByDefault(): void
+    {
+        $cacheStore = new \Charcoal\Cache\Cache(new DumbCacheStore(), useChecksumsByDefault: true);
+        $set1 = $cacheStore->set("test", new ExampleModelA(1, "test", "test@test.com", new ExampleModelB("a", "b")));
+        $this->assertInstanceOf(\Charcoal\Buffers\Frames\Bytes20::class, $set1);
+    }
 }
