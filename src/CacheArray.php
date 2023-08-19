@@ -194,6 +194,7 @@ class CacheArray implements \IteratorAggregate, CacheApiInterface
     /**
      * @param string $key
      * @param bool $returnCachedEntity
+     * @param bool $returnReferenceKeyObject
      * @param bool $expectInteger
      * @param bool|null $verifyChecksum
      * @return \Charcoal\Cache\CacheArray\BulkCacheOp
@@ -201,12 +202,13 @@ class CacheArray implements \IteratorAggregate, CacheApiInterface
     public function getFromAll(
         string $key,
         bool   $returnCachedEntity = false,
+        bool   $returnReferenceKeyObject = true,
         bool   $expectInteger = false,
         ?bool  $verifyChecksum = null
     ): BulkCacheOp
     {
-        return $this->allServersOp(function (Cache $store) use ($key, $returnCachedEntity, $expectInteger, $verifyChecksum) {
-            return $store->get($key, $returnCachedEntity, $expectInteger, $verifyChecksum);
+        return $this->allServersOp(function (Cache $store) use ($key, $returnCachedEntity, $returnReferenceKeyObject, $expectInteger, $verifyChecksum) {
+            return $store->get($key, $returnCachedEntity, $returnReferenceKeyObject, $expectInteger, $verifyChecksum);
         });
     }
 
