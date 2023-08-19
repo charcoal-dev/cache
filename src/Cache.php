@@ -23,7 +23,7 @@ use Charcoal\Cache\Exception\CacheDriverException;
  * Class Cache
  * @package Charcoal\Cache
  */
-class Cache
+class Cache implements CacheApiInterface
 {
     public readonly int $serializePrefixLen;
 
@@ -33,6 +33,7 @@ class Cache
      * @param bool $nullIfExpired
      * @param bool $deleteIfExpired
      * @param string $serializedEntityPrefix
+     * @param string $referenceKeysPrefix
      * @param int $plainStringsMaxLength
      */
     public function __construct(
@@ -41,6 +42,7 @@ class Cache
         public bool                          $nullIfExpired = true,
         public bool                          $deleteIfExpired = true,
         public readonly string               $serializedEntityPrefix = "~~charcoalCacheSerializedItem",
+        public readonly string               $referenceKeysPrefix = "~~charcoalCachedRef",
         public readonly int                  $plainStringsMaxLength = 0x80
     )
     {
@@ -68,16 +70,44 @@ class Cache
     }
 
     /**
+     * @param string $referenceKey
+     * @param string $targetKey
+     * @param int|null $ttl
+     * @param \Charcoal\Cache\Cache|null $targetKeyServer
+     * @param \Charcoal\Buffers\Frames\Bytes20|null $checksum
+     * @return bool
+     * @throws \Charcoal\Cache\Exception\CacheException
+     */
+    public function createReferenceKey(
+        string   $referenceKey,
+        string   $targetKey,
+        ?int     $ttl = null,
+        ?Cache   $targetKeyServer = null,
+        ?Bytes20 $checksum = null
+    ): bool
+    {
+        return (bool)$this->set(
+            $referenceKey,
+            CachedReferenceKey::Serialize($this, $targetKey, $targetKeyServer, $checksum),
+            $ttl,
+            false
+        );
+    }
+
+    /**
      * @param string $key
      * @param bool $returnCachedEntity
+     * @param bool $returnReferenceKeyObject
      * @param bool $expectInteger
      * @param bool|null $verifyChecksum
      * @return int|string|array|object|bool|null
-     * @throws \Charcoal\Cache\Exception\CacheException
+     * @throws \Charcoal\Cache\Exception\CacheDriverOpException
+     * @throws \Charcoal\Cache\Exception\CachedEntityException
      */
     public function get(
         string $key,
         bool   $returnCachedEntity = false,
+        bool   $returnReferenceKeyObject = true,
         bool   $expectInteger = false,
         ?bool  $verifyChecksum = null
     ): int|string|null|array|object|bool
@@ -89,6 +119,10 @@ class Cache
 
         $stored = CachedEntity::Restore($this, $stored, $expectInteger);
         if (!$stored instanceof CachedEntity) {
+            if (is_string($stored) && str_starts_with($stored, $this->referenceKeysPrefix) && $returnReferenceKeyObject) {
+                return CachedReferenceKey::Unserialize($this, $stored);
+            }
+
             return $stored;
         }
 

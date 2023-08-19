@@ -25,7 +25,7 @@ use Charcoal\Cache\Exception\CacheException;
  * Class CacheArray
  * @package Charcoal\Cache
  */
-class CacheArray implements \IteratorAggregate
+class CacheArray implements \IteratorAggregate, CacheApiInterface
 {
     protected array $stores = [];
     protected int $count = 0;
@@ -172,6 +172,7 @@ class CacheArray implements \IteratorAggregate
     /**
      * @param string $key
      * @param bool $returnCachedEntity
+     * @param bool $returnReferenceKeyObject
      * @param bool $expectInteger
      * @param bool|null $verifyChecksum
      * @return int|string|array|object|bool|null
@@ -180,12 +181,13 @@ class CacheArray implements \IteratorAggregate
     public function get(
         string $key,
         bool   $returnCachedEntity = false,
+        bool   $returnReferenceKeyObject = true,
         bool   $expectInteger = false,
         ?bool  $verifyChecksum = null
     ): int|string|null|array|object|bool
     {
-        return $this->primaryServerOp(function (Cache $primary) use ($key, $returnCachedEntity, $expectInteger, $verifyChecksum) {
-            return $primary->get($key, $returnCachedEntity, $expectInteger, $verifyChecksum);
+        return $this->primaryServerOp(function (Cache $primary) use ($key, $returnCachedEntity, $returnReferenceKeyObject, $expectInteger, $verifyChecksum) {
+            return $primary->get($key, $returnCachedEntity, $returnReferenceKeyObject, $expectInteger, $verifyChecksum);
         });
     }
 
