@@ -63,8 +63,13 @@ class CachedEntity
             throw new CachedEntityException(CachedEntityError::CHECKSUM_NOT_STORED);
         }
 
-        if (!$this->checksum->equals(hash_hmac("sha1", $this->value, $this->key, true))) {
-            throw new CachedEntityException(CachedEntityError::BAD_CHECKSUM);
+        $compare = hash_hmac("sha1", $this->value, $this->key, true);
+        if (!$this->checksum->equals($compare)) {
+            throw CachedEntityException::ChecksumError(
+                CachedEntityError::BAD_CHECKSUM,
+                $this->checksum,
+                new Bytes20($compare)
+            );
         }
     }
 
