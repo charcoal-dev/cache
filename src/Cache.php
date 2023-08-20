@@ -215,5 +215,18 @@ class Cache implements CacheApiInterface
     {
         return $this->storageDriver->isStored($key);
     }
+
+    /**
+     * @return bool
+     * @throws \Charcoal\Cache\Exception\CacheDriverOpException
+     */
+    public function ping(): bool
+    {
+        if (!$this->storageDriver->metaPingSupported()) {
+            return false;
+        }
+
+        return $this->storageDriver->ping();
+    }
 }
 
