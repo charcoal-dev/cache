@@ -41,6 +41,23 @@ class CachedRefKeysTest extends \PHPUnit\Framework\TestCase
      * @return void
      * @throws \Charcoal\Cache\Exception\CachedEntityException
      */
+    public function testLongSerializedReference(): void
+    {
+        $cacheStore = new \Charcoal\Cache\Cache(new DumbCacheStore(1), plainStringsMaxLength: 128);
+        $this->expectException(\Charcoal\Cache\Exception\CachedEntityException::class);
+        $this->expectExceptionCode(\Charcoal\Cache\Exception\CachedEntityError::REF_KEY_LENGTH->value);
+        \Charcoal\Cache\CachedReferenceKey::Serialize(
+            $cacheStore,
+            str_repeat("a1b2c3d4e5f6", 8),
+            null,
+            new \Charcoal\Buffers\Frames\Bytes20(str_repeat("\0", 20)),
+        );
+    }
+
+    /**
+     * @return void
+     * @throws \Charcoal\Cache\Exception\CachedEntityException
+     */
     public function testInvalidChecksum(): void
     {
         $cacheStore = new \Charcoal\Cache\Cache(new DumbCacheStore(1));
