@@ -21,6 +21,14 @@ namespace Charcoal\Cache;
 interface CacheDriverInterface
 {
     /**
+     * Implementing drivers should not try to include instance of Cache in their serialized array
+     * This method links instance of Cache with CacheDriverInterface on construct and unserialize
+     * @param \Charcoal\Cache\Cache $cache
+     * @return void
+     */
+    public function createLink(Cache $cache): void;
+
+    /**
      * @return bool
      */
     public function isConnected(): bool;

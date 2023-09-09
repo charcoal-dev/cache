@@ -25,6 +25,7 @@ use Charcoal\Cache\Exception\CacheDriverException;
  */
 class Cache implements CacheApiInterface
 {
+    public readonly Events $events;
     public readonly int $serializePrefixLen;
 
     /**
@@ -47,6 +48,42 @@ class Cache implements CacheApiInterface
     )
     {
         $this->serializePrefixLen = strlen($this->serializedEntityPrefix);
+        $this->events = new Events();
+        $this->storageDriver->createLink($this);
+    }
+
+    /**
+     * @return array
+     */
+    public function __serialize(): array
+    {
+        return [
+            "storageDriver" => $this->storageDriver,
+            "useChecksumsByDefault" => $this->useChecksumsByDefault,
+            "nullIfExpired" => $this->nullIfExpired,
+            "deleteIfExpired" => $this->deleteIfExpired,
+            "serializedEntityPrefix" => $this->serializedEntityPrefix,
+            "referenceKeysPrefix" => $this->referenceKeysPrefix,
+            "plainStringsMaxLength" => $this->plainStringsMaxLength,
+            "serializePrefixLen" => $this->serializePrefixLen,
+        ];
+    }
+
+    /**
+     * @param array $data
+     * @return void
+     */
+    public function __unserialize(array $data): void
+    {
+        $this->storageDriver = $data["storageDriver"];
+        $this->useChecksumsByDefault = $data["useChecksumsByDefault"];
+        $this->nullIfExpired = $data["nullIfExpired"];
+        $this->deleteIfExpired = $data["deleteIfExpired"];
+        $this->serializedEntityPrefix = $data["serializedEntityPrefix"];
+        $this->referenceKeysPrefix = $data["referenceKeysPrefix"];
+        $this->plainStringsMaxLength = $data["plainStringsMaxLength"];
+        $this->serializePrefixLen = $data["serializePrefixLen"];
+        $this->storageDriver->createLink($this);
     }
 
     /**

@@ -14,7 +14,8 @@
   ],
   "require": {
     "php": "^8.1",
-    "charcoal-dev/buffers": "dev-main"
+    "charcoal-dev/buffers": "dev-main",
+    "charcoal-dev/events-base": "dev-main"
   },
   "autoload": {
     "psr-4": {
