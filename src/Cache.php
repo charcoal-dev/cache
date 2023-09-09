@@ -66,6 +66,7 @@ class Cache implements CacheApiInterface
             "referenceKeysPrefix" => $this->referenceKeysPrefix,
             "plainStringsMaxLength" => $this->plainStringsMaxLength,
             "serializePrefixLen" => $this->serializePrefixLen,
+            "events" => $this->events,
         ];
     }
 
@@ -83,6 +84,7 @@ class Cache implements CacheApiInterface
         $this->referenceKeysPrefix = $data["referenceKeysPrefix"];
         $this->plainStringsMaxLength = $data["plainStringsMaxLength"];
         $this->serializePrefixLen = $data["serializePrefixLen"];
+        $this->events = $data["events"];
         $this->storageDriver->createLink($this);
     }
 
