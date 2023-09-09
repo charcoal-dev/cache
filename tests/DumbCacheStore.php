@@ -51,6 +51,10 @@ class DumbCacheStore implements \Charcoal\Cache\CacheDriverInterface
         return false;
     }
 
+    public function createLink(\Charcoal\Cache\Cache $cache): void
+    {
+    }
+
     public function store(string $key, int|string $value, ?int $ttl = null): void
     {
         $this->items[$key] = strval($value);
