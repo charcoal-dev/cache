@@ -17,17 +17,11 @@ use Charcoal\Events\EventsRegistry;
  */
 class Events extends EventsRegistry
 {
-    /**
-     * @return \Charcoal\Events\Event
-     */
     public function onConnected(): Event
     {
         return $this->on("connection");
     }
 
-    /**
-     * @return \Charcoal\Events\Event
-     */
     public function onDisconnect(): Event
     {
         return $this->on("disconnect");
