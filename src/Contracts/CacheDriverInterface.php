@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Charcoal\Cache\Contracts;
 
 use Charcoal\Cache\CacheClient;
+use Charcoal\Cache\Exception\CacheDriverConnectionException;
 use Charcoal\Cache\Exception\CacheDriverException;
 
 /**
@@ -21,6 +22,9 @@ interface CacheDriverInterface
 
     public function isConnected(): bool;
 
+    /**
+     * @throws CacheDriverConnectionException
+     */
     public function connect(): void;
 
     public function disconnect(): void;

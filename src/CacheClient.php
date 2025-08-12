@@ -15,6 +15,7 @@ use Charcoal\Cache\Contracts\CacheApiInterface;
 use Charcoal\Cache\Contracts\CacheDriverInterface;
 use Charcoal\Cache\Enums\CachedEntityError;
 use Charcoal\Cache\Exception\CachedEntityException;
+use Charcoal\Cache\Exception\CacheDriverConnectionException;
 use Charcoal\Cache\Exception\CacheDriverException;
 
 /**
@@ -163,6 +164,9 @@ class CacheClient implements CacheApiInterface, StorageProviderInterface
         return $this->storageDriver->isConnected();
     }
 
+    /**
+     * @throws CacheDriverConnectionException
+     */
     public function connect(): void
     {
         if ($this->isConnected()) {
