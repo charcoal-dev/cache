@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace Charcoal\Cache;
 
 use Charcoal\Buffers\Frames\Bytes20;
-use Charcoal\Cache\Exception\CachedEntityError;
+use Charcoal\Cache\Enums\CachedEntityError;
 use Charcoal\Cache\Exception\CachedEntityException;
 use Charcoal\Cache\Exception\CacheDriverException;
 use Charcoal\Cache\Exception\CacheException;
