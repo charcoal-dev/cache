@@ -6,11 +6,14 @@
 
 declare(strict_types=1);
 
-namespace Charcoal\Cache;
+namespace Charcoal\Cache\Contracts;
+
+use Charcoal\Cache\CacheClient;
+use Charcoal\Cache\Exception\CacheDriverException;
 
 /**
  * Interface CacheDriverInterface
- * @package Charcoal\Cache
+ * @package Charcoal\Cache\Contracts
  */
 interface CacheDriverInterface
 {
@@ -34,6 +37,9 @@ interface CacheDriverInterface
 
     public function isStored(string $key): bool;
 
+    /**
+     * @throws CacheDriverException
+     */
     public function delete(string $key): bool;
 
     public function truncate(): bool;
