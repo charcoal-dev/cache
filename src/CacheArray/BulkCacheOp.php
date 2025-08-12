@@ -14,13 +14,6 @@ namespace Charcoal\Cache\CacheArray;
  */
 class BulkCacheOp
 {
-    /**
-     * @param int $total
-     * @param int $success
-     * @param int $exceptions
-     * @param array $successList
-     * @param array $exceptionsList
-     */
     public function __construct(
         public int   $total = 0,
         public int   $success = 0,

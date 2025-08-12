@@ -12,6 +12,7 @@ use Charcoal\Base\Concerns\InstancedObjectsRegistry;
 use Charcoal\Base\Concerns\RegistryKeysLowercaseTrimmed;
 use Charcoal\Buffers\Frames\Bytes20;
 use Charcoal\Cache\CacheArray\BulkCacheOp;
+use Charcoal\Cache\Contracts\CacheApiInterface;
 use Charcoal\Cache\Exception\CacheArrayException;
 use Charcoal\Cache\Exception\CacheDriverConnectionException;
 use Charcoal\Cache\Exception\CacheException;
