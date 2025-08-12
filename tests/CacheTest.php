@@ -6,8 +6,15 @@
 
 declare(strict_types=1);
 
-require_once "DumbCacheStore.php";
-require_once "ExampleModels.php";
+namespace Charcoal\Cache\Tests;
+
+use Charcoal\Buffers\Frames\Bytes20;
+use Charcoal\Cache\CacheClient;
+use Charcoal\Cache\CachedEntity;
+use Charcoal\Cache\Exception\CacheException;
+use Charcoal\Cache\Tests\Fixtures\SampleObjectA;
+use Charcoal\Cache\Tests\Fixtures\SampleObjectB;
+use Charcoal\Cache\Tests\Polyfill\LocalCache;
 
 /**
  * Class CacheTest
@@ -16,14 +23,12 @@ class CacheTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @return void
-     * @throws \Charcoal\Cache\Exception\CacheDriverOpException
-     * @throws \Charcoal\Cache\Exception\CacheException
-     * @throws \Charcoal\Cache\Exception\CachedEntityException
+     * @throws CacheException
      */
     public function testNullIfExpired(): void
     {
-        $cacheStore1 = new \Charcoal\Cache\Cache(new DumbCacheStore(), nullIfExpired: false);
-        $cacheStore2 = new \Charcoal\Cache\Cache(new DumbCacheStore(), nullIfExpired: true);
+        $cacheStore1 = new CacheClient(new LocalCache(), nullIfExpired: false);
+        $cacheStore2 = new CacheClient(new LocalCache(), nullIfExpired: true);
         $item = new SampleObjectB("char", "coal");
         $cacheStore1->set("testKey", $item, 2);
         $cacheStore2->set("testKey", $item, 2);
@@ -32,19 +37,17 @@ class CacheTest extends \PHPUnit\Framework\TestCase
         $this->assertInstanceOf(SampleObjectB::class, $cacheStore1->get("testKey"));
         sleep(3);
         $this->assertNull($cacheStore2->get("testKey"), "Cache Store 2 will return NULL");
-        $this->expectException(\Charcoal\Cache\Exception\CachedEntityException::class);
+        $this->expectException(CacheException::class);
         $cacheStore1->get("testKey");
     }
 
     /**
      * @return void
-     * @throws \Charcoal\Cache\Exception\CacheDriverOpException
-     * @throws \Charcoal\Cache\Exception\CacheException
      * @throws \Charcoal\Cache\Exception\CachedEntityException
      */
     public function testDeleteIfExpired(): void
     {
-        $cacheStore = new \Charcoal\Cache\Cache(new DumbCacheStore(), nullIfExpired: true, deleteIfExpired: true);
+        $cacheStore = new CacheClient(new LocalCache(), nullIfExpired: true, deleteIfExpired: true);
         $item = new SampleObjectB("char", "coal");
         $cacheStore->set("testItem", $item, 2);
         $this->assertTrue($cacheStore->has("testItem"));
@@ -56,16 +59,14 @@ class CacheTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @return void
-     * @throws \Charcoal\Cache\Exception\CacheDriverOpException
-     * @throws \Charcoal\Cache\Exception\CacheException
      * @throws \Charcoal\Cache\Exception\CachedEntityException
      */
     public function testChecksum(): void
     {
-        $cacheStore = new \Charcoal\Cache\Cache(new DumbCacheStore());
+        $cacheStore = new CacheClient(new LocalCache());
         $checksum = $cacheStore->set("test", "some-value", createChecksum: true);
-        $this->assertInstanceOf(\Charcoal\Buffers\Frames\Bytes20::class, $checksum);
-        /** @var \Charcoal\Cache\CachedEntity $value */
+        $this->assertInstanceOf(Bytes20::class, $checksum);
+        /** @var CachedEntity $value */
         $value = $cacheStore->get("test", returnCachedEntity: true);
         $this->assertEquals(20, $value->checksum->len());
         $this->assertTrue($checksum->equals($value->checksum));
@@ -73,22 +74,20 @@ class CacheTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @return void
-     * @throws \Charcoal\Cache\Exception\CacheException
      */
     public function testNoChecksum(): void
     {
-        $cacheStore = new Charcoal\Cache\Cache(new DumbCacheStore(), useChecksumsByDefault: false);
+        $cacheStore = new CacheClient(new LocalCache(), useChecksumsByDefault: false);
         $set1 = $cacheStore->set("test", new SampleObjectA(1, "test", "test@test.com", new SampleObjectB("a", "b")));
         $this->assertIsBool($set1);
     }
 
     /**
      * @return void
-     * @throws \Charcoal\Cache\Exception\CacheException
      */
     public function testChecksumByDefault(): void
     {
-        $cacheStore = new \Charcoal\Cache\Cache(new DumbCacheStore(), useChecksumsByDefault: true);
+        $cacheStore = new CacheClient(new LocalCache(), useChecksumsByDefault: true);
         $set1 = $cacheStore->set("test", new SampleObjectA(1, "test", "test@test.com", new SampleObjectB("a", "b")));
         $this->assertInstanceOf(\Charcoal\Buffers\Frames\Bytes20::class, $set1);
     }

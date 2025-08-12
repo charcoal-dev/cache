@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace Charcoal\Cache\Tests\Polyfill;
 
-use Charcoal\Cache\CacheDriverInterface;
+use Charcoal\Cache\Contracts\CacheDriverInterface;
 
 class LocalCache implements CacheDriverInterface
 {
@@ -46,7 +46,7 @@ class LocalCache implements CacheDriverInterface
         return false;
     }
 
-    public function createLink(\Charcoal\Cache\Cache $cache): void
+    public function createLink(\Charcoal\Cache\CacheClient $cache): void
     {
     }
 

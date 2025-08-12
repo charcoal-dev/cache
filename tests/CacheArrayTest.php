@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace Charcoal\Cache\Tests;
 
-use Charcoal\Cache\Cache;
+use Charcoal\Cache\CacheClient;
 use Charcoal\Cache\CacheArray;
 use Charcoal\Cache\Tests\Fixtures\SampleObjectA;
 use Charcoal\Cache\Tests\Fixtures\SampleObjectB;
@@ -24,9 +24,9 @@ class CacheArrayTest extends \PHPUnit\Framework\TestCase
      */
     public function testUniqueKeysAndIterator(): void
     {
-        $cacheStore1 = new Cache(new LocalCache(1));
-        $cacheStore1a = new Cache(new LocalCache(1)); // This generates same metaUniqueId as above
-        $cacheStore2 = new Cache(new LocalCache(2));
+        $cacheStore1 = new CacheClient(new LocalCache(1));
+        $cacheStore1a = new CacheClient(new LocalCache(1)); // This generates same metaUniqueId as above
+        $cacheStore2 = new CacheClient(new LocalCache(2));
         $cacheArray = new CacheArray();
         $cacheArray->addServer($cacheStore1)
             ->addServer($cacheStore1a)
@@ -37,7 +37,7 @@ class CacheArrayTest extends \PHPUnit\Framework\TestCase
         $iteratorCount = 0;
         foreach ($cacheArray as $store) {
             $iteratorCount++;
-            $this->assertInstanceOf(Cache::class, $store);
+            $this->assertInstanceOf(CacheClient::class, $store);
             $this->assertEquals($iteratorCount, $store->storageDriver->salt);
         }
     }
@@ -49,16 +49,16 @@ class CacheArrayTest extends \PHPUnit\Framework\TestCase
      */
     public function testBulkOps1(): void
     {
-        $cacheStore1 = new Cache(new LocalCache(1));
-        $cacheStore2 = new Cache(new LocalCache(2));
-        $cacheStore3 = new Cache(new LocalCache(3));
+        $cacheStore1 = new CacheClient(new LocalCache(1));
+        $cacheStore2 = new CacheClient(new LocalCache(2));
+        $cacheStore3 = new CacheClient(new LocalCache(3));
         $cacheArray = new CacheArray();
         $cacheArray->addServer($cacheStore1)
             ->addServer($cacheStore2)
             ->addServer($cacheStore3);
 
         $cacheArray->setToAll("testExampleModel", new SampleObjectA(1, "test", "test@test.com", new SampleObjectB("a", "b")));
-        /** @var Cache $store */
+        /** @var CacheClient $store */
         foreach ($cacheArray as $store) {
             $this->assertTrue($store->has("testExampleModel"));
         }
@@ -99,9 +99,9 @@ class CacheArrayTest extends \PHPUnit\Framework\TestCase
      */
     public function testPrimaryOps1(): void
     {
-        $cacheStore1 = new Cache(new LocalCache(1));
-        $cacheStore2 = new Cache(new LocalCache(2));
-        $cacheStore3 = new Cache(new LocalCache(3));
+        $cacheStore1 = new CacheClient(new LocalCache(1));
+        $cacheStore2 = new CacheClient(new LocalCache(2));
+        $cacheStore3 = new CacheClient(new LocalCache(3));
         $cacheArray = new CacheArray();
         $cacheArray->addServer($cacheStore3)
             ->addServer($cacheStore2)
