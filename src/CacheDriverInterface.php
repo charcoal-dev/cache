@@ -14,79 +14,27 @@ namespace Charcoal\Cache;
  */
 interface CacheDriverInterface
 {
-    /**
-     * Implementing drivers should not try to include instance of Cache in their serialized array
-     * This method links instance of Cache with CacheDriverInterface on construct and unserialize
-     * @param \Charcoal\Cache\Cache $cache
-     * @return void
-     */
-    public function createLink(Cache $cache): void;
+    public function createLink(CacheClient $cache): void;
 
-    /**
-     * @return bool
-     */
     public function isConnected(): bool;
 
-    /**
-     * @return void
-     * @throws \Charcoal\Cache\Exception\CacheDriverConnectionException
-     */
     public function connect(): void;
 
-    /**
-     * @return void
-     */
     public function disconnect(): void;
 
-    /**
-     * @return string
-     */
     public function metaUniqueId(): string;
 
-    /**
-     * @return bool
-     */
     public function metaPingSupported(): bool;
 
-    /**
-     * @return bool
-     * @throws \Charcoal\Cache\Exception\CacheDriverOpException
-     */
     public function ping(): bool;
 
-    /**
-     * @param string $key
-     * @param int|string $value
-     * @param int|null $ttl
-     * @return void
-     * @throws \Charcoal\Cache\Exception\CacheDriverOpException
-     */
     public function store(string $key, int|string $value, ?int $ttl = null): void;
 
-    /**
-     * @param string $key
-     * @return int|string|bool|null
-     * @throws \Charcoal\Cache\Exception\CacheDriverOpException
-     */
     public function resolve(string $key): int|string|null|bool;
 
-    /**
-     * @param string $key
-     * @return bool
-     * @throws \Charcoal\Cache\Exception\CacheDriverOpException
-     */
     public function isStored(string $key): bool;
 
-    /**
-     * @param string $key
-     * @return bool
-     * @throws \Charcoal\Cache\Exception\CacheDriverOpException
-     */
     public function delete(string $key): bool;
 
-    /**
-     * @return bool
-     * @throws \Charcoal\Cache\Exception\CacheDriverOpException
-     */
     public function truncate(): bool;
 }
