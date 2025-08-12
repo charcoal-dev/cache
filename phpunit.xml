@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Part of the "charcoal-dev/cache" package.
+  ~ @link https://github.com/charcoal-dev/cache
+  -->
+
 <phpunit bootstrap="./vendor/autoload.php"
          colors="true"
          stopOnFailure="false"

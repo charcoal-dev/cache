@@ -1,13 +1,7 @@
 <?php
-/*
- * This file is a part of "charcoal-dev/cache" package.
- * https://github.com/charcoal-dev/cache
- *
- * Copyright (c) Furqan A. Siddiqui <hello@furqansiddiqui.com>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code or visit following link:
- * https://github.com/charcoal-dev/cache/blob/master/LICENSE
+/**
+ * Part of the "charcoal-dev/cache" package.
+ * @link https://github.com/charcoal-dev/cache
  */
 
 declare(strict_types=1);
@@ -23,7 +17,7 @@ use Charcoal\Cache\Exception\CacheDriverException;
  * Class CachedReferenceKey
  * @package Charcoal\Cache
  */
-class CachedReferenceKey
+readonly class CachedReferenceKey
 {
     /**
      * @param \Charcoal\Cache\Cache $cacheStore
@@ -99,9 +93,9 @@ class CachedReferenceKey
      * @param \Charcoal\Buffers\Frames\Bytes20|null $targetChecksum
      */
     protected function __construct(
-        public readonly string   $targetKey,
-        public readonly ?string  $targetServerId = null,
-        public readonly ?Bytes20 $targetChecksum = null,
+        public string   $targetKey,
+        public ?string  $targetServerId = null,
+        public ?Bytes20 $targetChecksum = null,
     )
     {
     }
