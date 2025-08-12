@@ -6,11 +6,11 @@
 
 declare(strict_types=1);
 
-namespace Charcoal\Cache\Exception;
+namespace Charcoal\Cache\Enums;
 
 /**
  * Class CachedEntityError
- * @package Charcoal\Cache\Exception
+ * @package Charcoal\Cache\Enums
  */
 enum CachedEntityError: int
 {

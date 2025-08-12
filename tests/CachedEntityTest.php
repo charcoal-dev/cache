@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace Charcoal\Cache\Tests;
 
-use Charcoal\Cache\Cache;
+use Charcoal\Cache\CacheClient;
 use Charcoal\Cache\CachedEntity;
 use Charcoal\Cache\Tests\Polyfill\LocalCache;
 
@@ -23,7 +23,7 @@ class CachedEntityTest extends \PHPUnit\Framework\TestCase
      */
     public function testStringsEncoding(): void
     {
-        $cache = new Cache(new LocalCache(), plainStringsMaxLength: 32);
+        $cache = new CacheClient(new LocalCache(), plainStringsMaxLength: 32);
         $smallString = "This is a smaller string";
         $longString = "This long string definitely exceeds 32 bytes";
         $exactLenString = str_repeat("\0", 32);

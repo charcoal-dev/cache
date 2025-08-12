@@ -9,31 +9,25 @@ declare(strict_types=1);
 namespace Charcoal\Cache;
 
 use Charcoal\Buffers\Frames\Bytes20;
-use Charcoal\Cache\Exception\CachedEntityError;
+use Charcoal\Cache\Enums\CachedEntityError;
 use Charcoal\Cache\Exception\CachedEntityException;
 
 /**
  * Class CachedEntity
  * @package Charcoal\Cache
  */
-class CachedEntity
+readonly class CachedEntity
 {
-    public readonly string $type;
-    public readonly bool|int|float|string|null $value;
-    public readonly int $storedOn;
-    public readonly ?Bytes20 $checksum;
+    public string $type;
+    public bool|int|float|string|null $value;
+    public int $storedOn;
+    public ?Bytes20 $checksum;
 
-    /**
-     * @param string $key
-     * @param mixed $value
-     * @param int|null $ttl
-     * @param bool $createChecksum
-     */
     public function __construct(
-        public readonly string $key,
-        mixed                  $value,
-        public readonly ?int   $ttl = null,
-        bool                   $createChecksum = true,
+        public string $key,
+        mixed         $value,
+        public ?int   $ttl = null,
+        bool          $createChecksum = true,
     )
     {
         $this->type = gettype($value);
@@ -48,8 +42,7 @@ class CachedEntity
     }
 
     /**
-     * @return void
-     * @throws \Charcoal\Cache\Exception\CachedEntityException
+     * @throws CachedEntityException
      */
     public function verifyChecksum(): void
     {
@@ -68,8 +61,7 @@ class CachedEntity
     }
 
     /**
-     * @return int|float|string|bool|array|object|null
-     * @throws \Charcoal\Cache\Exception\CachedEntityException
+     * @throws CachedEntityException
      */
     public function getStoredItem(): int|float|string|null|bool|array|object
     {
@@ -92,21 +84,19 @@ class CachedEntity
         return $obj;
     }
 
-    /**
-     * @param \Charcoal\Cache\Cache $cache
-     * @param string $key
-     * @param mixed $value
-     * @param bool $createChecksum
-     * @param int|null $ttl
-     * @return int|string|static
-     */
-    public static function Prepare(Cache $cache, string $key, mixed $value, bool $createChecksum, ?int $ttl = null): int|string|static
+    public static function Prepare(
+        CacheClient $cache,
+        string      $key,
+        mixed       $value,
+        bool        $createChecksum,
+        ?int        $ttl = null
+    ): int|string|static
     {
         if ($value instanceof static) {
             return $value;
         }
 
-        if ($createChecksum) { // when creating checksum, small strings and integers will be stored in CachedEntity
+        if ($createChecksum) {
             return new static($key, $value, $ttl, true);
         }
 
@@ -121,12 +111,10 @@ class CachedEntity
         return new static($key, $value, $ttl, false);
     }
 
-    /**
-     * @param \Charcoal\Cache\Cache $cache
-     * @param \Charcoal\Cache\CachedEntity $entity
-     * @return string
-     */
-    public static function Serialize(Cache $cache, CachedEntity $entity): string
+    public static function Serialize(
+        CacheClient $cache,
+        CachedEntity $entity
+    ): string
     {
         $serialized = serialize($entity);
         $nullBytesReq = $cache->plainStringsMaxLength - strlen($serialized);
@@ -138,13 +126,13 @@ class CachedEntity
     }
 
     /**
-     * @param \Charcoal\Cache\Cache $cache
-     * @param string $serialized
-     * @param bool $expectInteger
-     * @return int|string|static
-     * @throws \Charcoal\Cache\Exception\CachedEntityException
+     * @throws CachedEntityException
      */
-    public static function Restore(Cache $cache, string $serialized, bool $expectInteger = false): int|string|static
+    public static function Restore(
+        CacheClient $cache,
+        string $serialized,
+        bool $expectInteger = false
+    ): int|string|static
     {
         if ($expectInteger && preg_match('/^-?\d+$/', $serialized)) {
             return intval($serialized);
