@@ -12,6 +12,7 @@ use Charcoal\Buffers\Frames\Bytes20;
 use Charcoal\Cache\Exception\CachedEntityError;
 use Charcoal\Cache\Exception\CachedEntityException;
 use Charcoal\Cache\Exception\CacheDriverException;
+use Charcoal\Cache\Exception\CacheException;
 
 /**
  * Class CachedReferenceKey
@@ -20,18 +21,13 @@ use Charcoal\Cache\Exception\CacheDriverException;
 readonly class CachedReferenceKey
 {
     /**
-     * @param \Charcoal\Cache\Cache $cacheStore
-     * @param string $targetKey
-     * @param \Charcoal\Cache\Cache|null $targetKeyServer
-     * @param \Charcoal\Buffers\Frames\Bytes20|null $checksum
-     * @return string
-     * @throws \Charcoal\Cache\Exception\CachedEntityException
+     * @throws CachedEntityException
      */
     public static function Serialize(
-        Cache    $cacheStore,
-        string   $targetKey,
-        ?Cache   $targetKeyServer = null,
-        ?Bytes20 $checksum = null
+        CacheClient  $cacheStore,
+        string       $targetKey,
+        ?CacheClient $targetKeyServer = null,
+        ?Bytes20     $checksum = null
     ): string
     {
         if ($targetKeyServer) {
@@ -59,12 +55,9 @@ readonly class CachedReferenceKey
     }
 
     /**
-     * @param \Charcoal\Cache\Cache $cacheStore
-     * @param string $serialized
-     * @return static
-     * @throws \Charcoal\Cache\Exception\CachedEntityException
+     * @throws CachedEntityException
      */
-    public static function Unserialize(Cache $cacheStore, string $serialized): static
+    public static function Unserialize(CacheClient $cacheStore, string $serialized): static
     {
         $matches = [];
         if (!preg_match(
@@ -87,11 +80,6 @@ readonly class CachedReferenceKey
         );
     }
 
-    /**
-     * @param string $targetKey
-     * @param string|null $targetServerId
-     * @param \Charcoal\Buffers\Frames\Bytes20|null $targetChecksum
-     */
     protected function __construct(
         public string   $targetKey,
         public ?string  $targetServerId = null,
@@ -101,11 +89,9 @@ readonly class CachedReferenceKey
     }
 
     /**
-     * @param \Charcoal\Cache\Cache|\Charcoal\Cache\CacheArray $storage
-     * @return mixed
-     * @throws \Charcoal\Cache\Exception\CacheException
+     * @throws CacheException
      */
-    public function resolve(Cache|CacheArray $storage): mixed
+    public function resolve(CacheClient|CacheArray $storage): mixed
     {
         $cacheArray = $storage instanceof CacheArray ? $storage : [$storage];
         foreach ($cacheArray as $cache) {
