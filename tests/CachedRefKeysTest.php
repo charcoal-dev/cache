@@ -28,7 +28,7 @@ class CachedRefKeysTest extends \PHPUnit\Framework\TestCase
      */
     public function testSameServerRef(): void
     {
-        $cacheStore = new CacheClient(new LocalCache(1));
+        $cacheStore = new CacheClient(new LocalCache(), staticScopeReplaceExisting: true);
         $refKey = CachedReferenceKey::Serialize($cacheStore, "users_id:1100786");
         $this->assertEquals("~~charcoalCachedRef[~][users_id:1100786](*)", $refKey);
 
@@ -45,7 +45,7 @@ class CachedRefKeysTest extends \PHPUnit\Framework\TestCase
      */
     public function testLongSerializedReference(): void
     {
-        $cacheStore = new CacheClient(new LocalCache(1), plainStringsMaxLength: 128);
+        $cacheStore = new CacheClient(new LocalCache(), plainStringsMaxLength: 128, staticScopeReplaceExisting: true);
         $this->expectException(CachedEntityException::class);
         $this->expectExceptionCode(CachedEntityError::REF_KEY_LENGTH->value);
         CachedReferenceKey::Serialize(
@@ -62,7 +62,7 @@ class CachedRefKeysTest extends \PHPUnit\Framework\TestCase
      */
     public function testInvalidChecksum(): void
     {
-        $cacheStore = new CacheClient(new LocalCache(1));
+        $cacheStore = new CacheClient(new LocalCache(), staticScopeReplaceExisting: true);
         $serialized = "~~charcoalCachedRef[~][users_id:1100786]()";
         $this->expectException("InvalidArgumentException");
         CachedReferenceKey::Unserialize($cacheStore, $serialized);
@@ -76,7 +76,7 @@ class CachedRefKeysTest extends \PHPUnit\Framework\TestCase
      */
     public function testCacheReferences(): void
     {
-        $cacheStore = new CacheClient(new LocalCache(1));
+        $cacheStore = new CacheClient(new LocalCache(), staticScopeReplaceExisting: true);
         $model = new SampleObjectA(1, "charcoal", "test@charcoal.dev", new SampleObjectB("a", "b"));
         $checksum = $cacheStore->set("exampleModel_1", $model, createChecksum: true);
         $cacheStore->createReferenceKey("exampleModel_charcoal", "exampleModel_1", checksum: $checksum);
@@ -94,9 +94,9 @@ class CachedRefKeysTest extends \PHPUnit\Framework\TestCase
      */
     public function testCacheReferenceArray1(): void
     {
-        $cacheStore1 = new CacheClient(new LocalCache(1));
-        $cacheStore2 = new CacheClient(new LocalCache(2));
-        $cacheStore3 = new CacheClient(new LocalCache(3));
+        $cacheStore1 = new CacheClient(new LocalCache(1), staticScopeReplaceExisting: true);
+        $cacheStore2 = new CacheClient(new LocalCache(2), staticScopeReplaceExisting: true);
+        $cacheStore3 = new CacheClient(new LocalCache(3), staticScopeReplaceExisting: true);
         $cacheArray = new CacheArray();
         $cacheArray->addServer($cacheStore1)
             ->addServer($cacheStore2)
@@ -136,9 +136,9 @@ class CachedRefKeysTest extends \PHPUnit\Framework\TestCase
      */
     public function testCacheReferenceArray2(): void
     {
-        $cacheStore1 = new CacheClient(new LocalCache(1));
-        $cacheStore2 = new CacheClient(new LocalCache(2));
-        $cacheStore3 = new CacheClient(new LocalCache(3));
+        $cacheStore1 = new CacheClient(new LocalCache(1), staticScopeReplaceExisting: true);
+        $cacheStore2 = new CacheClient(new LocalCache(2), staticScopeReplaceExisting: true);
+        $cacheStore3 = new CacheClient(new LocalCache(3), staticScopeReplaceExisting: true);
 
         // Store model in Cache Store # 3
         $model = new SampleObjectA(1, "charcoal", "test@charcoal.dev", new SampleObjectB("a", "b"));

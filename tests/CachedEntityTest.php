@@ -23,7 +23,7 @@ class CachedEntityTest extends \PHPUnit\Framework\TestCase
      */
     public function testStringsEncoding(): void
     {
-        $cache = new CacheClient(new LocalCache(), plainStringsMaxLength: 32);
+        $cache = new CacheClient(new LocalCache(), plainStringsMaxLength: 32, staticScopeReplaceExisting: true);
         $smallString = "This is a smaller string";
         $longString = "This long string definitely exceeds 32 bytes";
         $exactLenString = str_repeat("\0", 32);

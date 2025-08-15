@@ -24,9 +24,9 @@ class CacheArrayTest extends \PHPUnit\Framework\TestCase
      */
     public function testUniqueKeysAndIterator(): void
     {
-        $cacheStore1 = new CacheClient(new LocalCache(1));
-        $cacheStore1a = new CacheClient(new LocalCache(1)); // This generates same metaUniqueId as above
-        $cacheStore2 = new CacheClient(new LocalCache(2));
+        $cacheStore1 = new CacheClient(new LocalCache(1), staticScopeReplaceExisting: true);
+        $cacheStore1a = new CacheClient(new LocalCache(1), staticScopeReplaceExisting: true); // This generates same metaUniqueId as above
+        $cacheStore2 = new CacheClient(new LocalCache(2), staticScopeReplaceExisting: true);
         $cacheArray = new CacheArray();
         $cacheArray->addServer($cacheStore1)
             ->addServer($cacheStore1a)
@@ -49,9 +49,9 @@ class CacheArrayTest extends \PHPUnit\Framework\TestCase
      */
     public function testBulkOps1(): void
     {
-        $cacheStore1 = new CacheClient(new LocalCache(1));
-        $cacheStore2 = new CacheClient(new LocalCache(2));
-        $cacheStore3 = new CacheClient(new LocalCache(3));
+        $cacheStore1 = new CacheClient(new LocalCache(1), staticScopeReplaceExisting: true);
+        $cacheStore2 = new CacheClient(new LocalCache(2), staticScopeReplaceExisting: true);
+        $cacheStore3 = new CacheClient(new LocalCache(3), staticScopeReplaceExisting: true);
         $cacheArray = new CacheArray();
         $cacheArray->addServer($cacheStore1)
             ->addServer($cacheStore2)
@@ -99,9 +99,9 @@ class CacheArrayTest extends \PHPUnit\Framework\TestCase
      */
     public function testPrimaryOps1(): void
     {
-        $cacheStore1 = new CacheClient(new LocalCache(1));
-        $cacheStore2 = new CacheClient(new LocalCache(2));
-        $cacheStore3 = new CacheClient(new LocalCache(3));
+        $cacheStore1 = new CacheClient(new LocalCache(1), staticScopeReplaceExisting: true);
+        $cacheStore2 = new CacheClient(new LocalCache(2), staticScopeReplaceExisting: true);
+        $cacheStore3 = new CacheClient(new LocalCache(3), staticScopeReplaceExisting: true);
         $cacheArray = new CacheArray();
         $cacheArray->addServer($cacheStore3)
             ->addServer($cacheStore2)

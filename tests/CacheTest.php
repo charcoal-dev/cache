@@ -27,8 +27,8 @@ class CacheTest extends \PHPUnit\Framework\TestCase
      */
     public function testNullIfExpired(): void
     {
-        $cacheStore1 = new CacheClient(new LocalCache(), nullIfExpired: false);
-        $cacheStore2 = new CacheClient(new LocalCache(), nullIfExpired: true);
+        $cacheStore1 = new CacheClient(new LocalCache(), nullIfExpired: false, staticScopeReplaceExisting: true);
+        $cacheStore2 = new CacheClient(new LocalCache(), nullIfExpired: true, staticScopeReplaceExisting: true);
         $item = new SampleObjectB("char", "coal");
         $cacheStore1->set("testKey", $item, 2);
         $cacheStore2->set("testKey", $item, 2);
@@ -47,7 +47,7 @@ class CacheTest extends \PHPUnit\Framework\TestCase
      */
     public function testDeleteIfExpired(): void
     {
-        $cacheStore = new CacheClient(new LocalCache(), nullIfExpired: true, deleteIfExpired: true);
+        $cacheStore = new CacheClient(new LocalCache(), nullIfExpired: true, deleteIfExpired: true, staticScopeReplaceExisting: true);
         $item = new SampleObjectB("char", "coal");
         $cacheStore->set("testItem", $item, 2);
         $this->assertTrue($cacheStore->has("testItem"));
@@ -63,7 +63,7 @@ class CacheTest extends \PHPUnit\Framework\TestCase
      */
     public function testChecksum(): void
     {
-        $cacheStore = new CacheClient(new LocalCache());
+        $cacheStore = new CacheClient(new LocalCache(), staticScopeReplaceExisting: true);
         $checksum = $cacheStore->set("test", "some-value", createChecksum: true);
         $this->assertInstanceOf(Bytes20::class, $checksum);
         /** @var CachedEntity $value */
@@ -77,7 +77,7 @@ class CacheTest extends \PHPUnit\Framework\TestCase
      */
     public function testNoChecksum(): void
     {
-        $cacheStore = new CacheClient(new LocalCache(), useChecksumsByDefault: false);
+        $cacheStore = new CacheClient(new LocalCache(), useChecksumsByDefault: false, staticScopeReplaceExisting: true);
         $set1 = $cacheStore->set("test", new SampleObjectA(1, "test", "test@test.com", new SampleObjectB("a", "b")));
         $this->assertIsBool($set1);
     }
@@ -87,7 +87,7 @@ class CacheTest extends \PHPUnit\Framework\TestCase
      */
     public function testChecksumByDefault(): void
     {
-        $cacheStore = new CacheClient(new LocalCache(), useChecksumsByDefault: true);
+        $cacheStore = new CacheClient(new LocalCache(), useChecksumsByDefault: true, staticScopeReplaceExisting: true);
         $set1 = $cacheStore->set("test", new SampleObjectA(1, "test", "test@test.com", new SampleObjectB("a", "b")));
         $this->assertInstanceOf(\Charcoal\Buffers\Frames\Bytes20::class, $set1);
     }
