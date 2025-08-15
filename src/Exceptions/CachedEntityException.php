@@ -13,7 +13,7 @@ use Charcoal\Cache\Enums\CachedEntityError;
 
 /**
  * Class CachedEntityException
- * @package Charcoal\Cache\Exception
+ * @package Charcoal\Cache\Exceptions
  */
 class CachedEntityException extends CacheException
 {

@@ -10,7 +10,7 @@ namespace Charcoal\Cache\Exceptions;
 
 /**
  * Class CacheException
- * @package Charcoal\Cache\Exception
+ * @package Charcoal\Cache\Exceptions
  */
 class CacheException extends \Exception
 {

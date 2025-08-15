@@ -10,7 +10,7 @@ namespace Charcoal\Cache\Exceptions;
 
 /**
  * Class CacheDriverOpException
- * @package Charcoal\Cache\Exception
+ * @package Charcoal\Cache\Exceptions
  */
 class CacheDriverOpException extends CacheDriverException
 {
