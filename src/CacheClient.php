@@ -14,17 +14,19 @@ use Charcoal\Buffers\Frames\Bytes20;
 use Charcoal\Cache\Contracts\CacheApiInterface;
 use Charcoal\Cache\Contracts\CacheDriverInterface;
 use Charcoal\Cache\Enums\CachedEntityError;
+use Charcoal\Cache\Events\CacheEvents;
 use Charcoal\Cache\Exception\CachedEntityException;
 use Charcoal\Cache\Exception\CacheDriverConnectionException;
 use Charcoal\Cache\Exception\CacheDriverException;
+use Charcoal\Events\Contracts\EventStoreOwnerInterface;
 
 /**
  * Class CacheClient
  * @package Charcoal\Cache
  */
-class CacheClient implements CacheApiInterface, StorageProviderInterface
+class CacheClient implements CacheApiInterface, StorageProviderInterface, EventStoreOwnerInterface
 {
-    public readonly Events $events;
+    public readonly CacheEvents $events;
     public readonly int $serializePrefixLen;
 
     public function __construct(
@@ -34,12 +36,13 @@ class CacheClient implements CacheApiInterface, StorageProviderInterface
         public bool                          $deleteIfExpired = true,
         public readonly string               $serializedEntityPrefix = "~~charcoalCacheSerializedItem",
         public readonly string               $referenceKeysPrefix = "~~charcoalCachedRef",
-        public readonly int                  $plainStringsMaxLength = 0x80
+        public readonly int                  $plainStringsMaxLength = 0x80,
+        bool                                 $staticScopeReplaceExisting = false
     )
     {
         $this->serializePrefixLen = strlen($this->serializedEntityPrefix);
-        $this->events = new Events();
         $this->storageDriver->createLink($this);
+        $this->events = new CacheEvents($this, $staticScopeReplaceExisting);
     }
 
     public function __serialize(): array
@@ -214,6 +217,11 @@ class CacheClient implements CacheApiInterface, StorageProviderInterface
     }
 
     public function storageProviderId(): string
+    {
+        return $this->storageDriver->metaUniqueId();
+    }
+
+    public function eventsUniqueContextKey(): string
     {
         return $this->storageDriver->metaUniqueId();
     }

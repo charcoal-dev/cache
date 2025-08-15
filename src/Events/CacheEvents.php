@@ -20,9 +20,10 @@ readonly class CacheEvents
 
     /**
      * @param CacheClient $cache
+     * @param bool $staticScopeReplaceExisting
      */
-    public function __construct(CacheClient $cache)
+    public function __construct(CacheClient $cache, bool $staticScopeReplaceExisting)
     {
-        $this->connectionState = new ConnectionEvent($cache);
+        $this->connectionState = new ConnectionEvent($cache, $staticScopeReplaceExisting);
     }
 }
