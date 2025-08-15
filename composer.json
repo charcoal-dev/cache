@@ -14,8 +14,8 @@
   ],
   "require": {
     "php": "^8.3",
-    "charcoal-dev/base": ">=0.0.1 <0.1.0",
-    "charcoal-dev/events": "^0.1.6",
+    "charcoal-dev/base": ">=0.0.13 <0.1.0",
+    "charcoal-dev/events": "^0.1.7",
     "charcoal-dev/buffers": "^0.2.1"
   },
   "autoload": {
