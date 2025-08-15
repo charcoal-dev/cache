@@ -8,6 +8,8 @@ declare(strict_types=1);
 
 namespace Charcoal\Cache\Events\Connection;
 
+use Charcoal\Cache\Contracts\CacheDriverInterface;
+
 /**
  * Class ConnectionSuccess
  * @package Charcoal\Cache\Events\Connection
@@ -15,7 +17,7 @@ namespace Charcoal\Cache\Events\Connection;
 readonly class ConnectionError implements ConnectionStateContext
 {
     public function __construct(
-        public \Throwable $exception
+        public CacheDriverInterface $store
     )
     {
     }
