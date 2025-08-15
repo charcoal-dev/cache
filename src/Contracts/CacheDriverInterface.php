@@ -9,8 +9,8 @@ declare(strict_types=1);
 namespace Charcoal\Cache\Contracts;
 
 use Charcoal\Cache\CacheClient;
-use Charcoal\Cache\Exception\CacheDriverConnectionException;
-use Charcoal\Cache\Exception\CacheDriverException;
+use Charcoal\Cache\Exceptions\CacheDriverConnectionException;
+use Charcoal\Cache\Exceptions\CacheDriverException;
 
 /**
  * Interface CacheDriverInterface

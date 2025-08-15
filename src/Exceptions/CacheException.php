@@ -6,12 +6,12 @@
 
 declare(strict_types=1);
 
-namespace Charcoal\Cache\Exception;
+namespace Charcoal\Cache\Exceptions;
 
 /**
- * Class CacheDriverConnectionException
+ * Class CacheException
  * @package Charcoal\Cache\Exception
  */
-class CacheDriverConnectionException extends CacheDriverException
+class CacheException extends \Exception
 {
 }

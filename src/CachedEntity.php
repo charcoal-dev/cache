@@ -10,7 +10,7 @@ namespace Charcoal\Cache;
 
 use Charcoal\Buffers\Frames\Bytes20;
 use Charcoal\Cache\Enums\CachedEntityError;
-use Charcoal\Cache\Exception\CachedEntityException;
+use Charcoal\Cache\Exceptions\CachedEntityException;
 
 /**
  * Class CachedEntity

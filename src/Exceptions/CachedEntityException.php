@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace Charcoal\Cache\Exception;
+namespace Charcoal\Cache\Exceptions;
 
 use Charcoal\Buffers\Frames\Bytes20;
 use Charcoal\Cache\Enums\CachedEntityError;

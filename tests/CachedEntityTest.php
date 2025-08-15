@@ -19,7 +19,7 @@ class CachedEntityTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @return void
-     * @throws \Charcoal\Cache\Exception\CachedEntityException
+     * @throws \Charcoal\Cache\Exceptions\CachedEntityException
      */
     public function testStringsEncoding(): void
     {

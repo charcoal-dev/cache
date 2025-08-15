@@ -13,9 +13,9 @@ use Charcoal\Base\Concerns\RegistryKeysLowercaseTrimmed;
 use Charcoal\Buffers\Frames\Bytes20;
 use Charcoal\Cache\CacheArray\BulkCacheOp;
 use Charcoal\Cache\Contracts\CacheApiInterface;
-use Charcoal\Cache\Exception\CacheArrayException;
-use Charcoal\Cache\Exception\CacheDriverConnectionException;
-use Charcoal\Cache\Exception\CacheException;
+use Charcoal\Cache\Exceptions\CacheArrayException;
+use Charcoal\Cache\Exceptions\CacheDriverConnectionException;
+use Charcoal\Cache\Exceptions\CacheException;
 
 /**
  * Class CacheArray
@@ -57,7 +57,7 @@ class CacheArray implements \IteratorAggregate, CacheApiInterface
     }
 
     /**
-     * @throws \Charcoal\Cache\Exception\CacheArrayException
+     * @throws \Charcoal\Cache\Exceptions\CacheArrayException
      */
     protected function getPrimary(): CacheClient
     {
@@ -139,7 +139,7 @@ class CacheArray implements \IteratorAggregate, CacheApiInterface
     }
 
     /**
-     * @throws \Charcoal\Cache\Exception\CacheException
+     * @throws \Charcoal\Cache\Exceptions\CacheException
      */
     public function get(
         string $key,
@@ -182,7 +182,7 @@ class CacheArray implements \IteratorAggregate, CacheApiInterface
     }
 
     /**
-     * @throws \Charcoal\Cache\Exception\CacheException
+     * @throws \Charcoal\Cache\Exceptions\CacheException
      */
     public function has(string $key): bool
     {
@@ -199,7 +199,7 @@ class CacheArray implements \IteratorAggregate, CacheApiInterface
     }
 
     /**
-     * @throws \Charcoal\Cache\Exception\CacheException
+     * @throws \Charcoal\Cache\Exceptions\CacheException
      */
     public function delete(string $key): bool
     {

@@ -13,7 +13,7 @@ use Charcoal\Cache\CacheArray;
 use Charcoal\Cache\CacheClient;
 use Charcoal\Cache\CachedReferenceKey;
 use Charcoal\Cache\Enums\CachedEntityError;
-use Charcoal\Cache\Exception\CachedEntityException;
+use Charcoal\Cache\Exceptions\CachedEntityException;
 use Charcoal\Cache\Tests\Fixtures\SampleObjectA;
 use Charcoal\Cache\Tests\Fixtures\SampleObjectB;
 use Charcoal\Cache\Tests\Polyfill\LocalCache;
@@ -71,8 +71,8 @@ class CachedRefKeysTest extends \PHPUnit\Framework\TestCase
     /**
      * @return void
      * @throws CachedEntityException
-     * @throws \Charcoal\Cache\Exception\CacheDriverOpException
-     * @throws \Charcoal\Cache\Exception\CacheException
+     * @throws \Charcoal\Cache\Exceptions\CacheDriverOpException
+     * @throws \Charcoal\Cache\Exceptions\CacheException
      */
     public function testCacheReferences(): void
     {
@@ -90,7 +90,7 @@ class CachedRefKeysTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @return void
-     * @throws \Charcoal\Cache\Exception\CacheException
+     * @throws \Charcoal\Cache\Exceptions\CacheException
      */
     public function testCacheReferenceArray1(): void
     {
@@ -131,8 +131,8 @@ class CachedRefKeysTest extends \PHPUnit\Framework\TestCase
     /**
      * @return void
      * @throws CachedEntityException
-     * @throws \Charcoal\Cache\Exception\CacheDriverOpException
-     * @throws \Charcoal\Cache\Exception\CacheException
+     * @throws \Charcoal\Cache\Exceptions\CacheDriverOpException
+     * @throws \Charcoal\Cache\Exceptions\CacheException
      */
     public function testCacheReferenceArray2(): void
     {

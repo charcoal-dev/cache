@@ -44,8 +44,8 @@ class CacheArrayTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @return void
-     * @throws \Charcoal\Cache\Exception\CacheDriverOpException
-     * @throws \Charcoal\Cache\Exception\CacheException
+     * @throws \Charcoal\Cache\Exceptions\CacheDriverOpException
+     * @throws \Charcoal\Cache\Exceptions\CacheException
      */
     public function testBulkOps1(): void
     {
@@ -95,7 +95,7 @@ class CacheArrayTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @return void
-     * @throws \Charcoal\Cache\Exception\CacheException
+     * @throws \Charcoal\Cache\Exceptions\CacheException
      */
     public function testPrimaryOps1(): void
     {

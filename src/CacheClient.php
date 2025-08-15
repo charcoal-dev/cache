@@ -15,9 +15,9 @@ use Charcoal\Cache\Contracts\CacheApiInterface;
 use Charcoal\Cache\Contracts\CacheDriverInterface;
 use Charcoal\Cache\Enums\CachedEntityError;
 use Charcoal\Cache\Events\CacheEvents;
-use Charcoal\Cache\Exception\CachedEntityException;
-use Charcoal\Cache\Exception\CacheDriverConnectionException;
-use Charcoal\Cache\Exception\CacheDriverException;
+use Charcoal\Cache\Exceptions\CachedEntityException;
+use Charcoal\Cache\Exceptions\CacheDriverConnectionException;
+use Charcoal\Cache\Exceptions\CacheDriverException;
 use Charcoal\Events\Contracts\EventStoreOwnerInterface;
 
 /**

@@ -10,9 +10,9 @@ namespace Charcoal\Cache;
 
 use Charcoal\Buffers\Frames\Bytes20;
 use Charcoal\Cache\Enums\CachedEntityError;
-use Charcoal\Cache\Exception\CachedEntityException;
-use Charcoal\Cache\Exception\CacheDriverException;
-use Charcoal\Cache\Exception\CacheException;
+use Charcoal\Cache\Exceptions\CachedEntityException;
+use Charcoal\Cache\Exceptions\CacheDriverException;
+use Charcoal\Cache\Exceptions\CacheException;
 
 /**
  * Class CachedReferenceKey

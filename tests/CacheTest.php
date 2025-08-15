@@ -11,7 +11,7 @@ namespace Charcoal\Cache\Tests;
 use Charcoal\Buffers\Frames\Bytes20;
 use Charcoal\Cache\CacheClient;
 use Charcoal\Cache\CachedEntity;
-use Charcoal\Cache\Exception\CacheException;
+use Charcoal\Cache\Exceptions\CacheException;
 use Charcoal\Cache\Tests\Fixtures\SampleObjectA;
 use Charcoal\Cache\Tests\Fixtures\SampleObjectB;
 use Charcoal\Cache\Tests\Polyfill\LocalCache;
@@ -43,7 +43,7 @@ class CacheTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @return void
-     * @throws \Charcoal\Cache\Exception\CachedEntityException
+     * @throws \Charcoal\Cache\Exceptions\CachedEntityException
      */
     public function testDeleteIfExpired(): void
     {
@@ -59,7 +59,7 @@ class CacheTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @return void
-     * @throws \Charcoal\Cache\Exception\CachedEntityException
+     * @throws \Charcoal\Cache\Exceptions\CachedEntityException
      */
     public function testChecksum(): void
     {
