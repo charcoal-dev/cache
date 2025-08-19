@@ -213,7 +213,7 @@ class CacheClient implements CacheApiInterface, StorageProviderInterface, EventS
 
     public function storageType(): StorageType
     {
-        return StorageType::CACHE;
+        return StorageType::Cache;
     }
 
     public function storageProviderId(): string
