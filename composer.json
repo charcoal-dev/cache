@@ -14,9 +14,9 @@
   ],
   "require": {
     "php": "^8.3",
-    "charcoal-dev/base": "^0.1.0",
+    "charcoal-dev/base": "^0.1.5",
     "charcoal-dev/events": "^0.1.7",
-    "charcoal-dev/buffers": "^0.2.1"
+    "charcoal-dev/buffers": "^0.2.2"
   },
   "autoload": {
     "psr-4": {
