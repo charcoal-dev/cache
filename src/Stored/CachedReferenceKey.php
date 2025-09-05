@@ -12,8 +12,8 @@ use Charcoal\Base\Encoding\Encoding;
 use Charcoal\Buffers\Types\Bytes20;
 use Charcoal\Cache\CacheClient;
 use Charcoal\Cache\Enums\CachedEntityError;
-use Charcoal\Cache\Exceptions\CachedEntityException;
-use Charcoal\Cache\Exceptions\CacheDriverException;
+use Charcoal\Cache\Exceptions\CachedEnvelopeException;
+use Charcoal\Cache\Exceptions\CacheStoreException;
 use Charcoal\Cache\Exceptions\CacheException;
 use Charcoal\Cache\Pool\CachePool;
 
@@ -24,7 +24,7 @@ use Charcoal\Cache\Pool\CachePool;
 final readonly class CachedReferenceKey
 {
     /**
-     * @throws CachedEntityException
+     * @throws CachedEnvelopeException
      */
     public static function Serialize(
         CacheClient  $cacheStore,
@@ -48,7 +48,7 @@ final readonly class CachedReferenceKey
         );
 
         if (strlen($reference) > $cacheStore->plainStringsMaxLength) {
-            throw new CachedEntityException(
+            throw new CachedEnvelopeException(
                 CachedEntityError::REF_KEY_LENGTH,
                 sprintf("Reference key exceeds plain string limit of %d bytes", $cacheStore->plainStringsMaxLength)
             );
@@ -58,7 +58,7 @@ final readonly class CachedReferenceKey
     }
 
     /**
-     * @throws CachedEntityException
+     * @throws CachedEnvelopeException
      */
     public static function Unserialize(CacheClient $cacheStore, string $serialized): self
     {
@@ -68,7 +68,7 @@ final readonly class CachedReferenceKey
                 $serialized,
                 $matches
             ) || count($matches) !== 4) {
-            throw new CachedEntityException(
+            throw new CachedEnvelopeException(
                 CachedEntityError::REF_DECODE_ERROR,
                 "Malformed reference pointer"
             );
@@ -107,10 +107,10 @@ final readonly class CachedReferenceKey
                 continue;
             }
 
-            $item = $cache->get($this->targetKey, returnCachedEntity: true, returnReferenceKeyObject: false);
+            $item = $cache->get($this->targetKey, returnEnvelope: true, returnReferenceKeyObject: false);
             if (!$item instanceof CachedEnvelope) {
                 if ($item) {
-                    throw new CachedEntityException(
+                    throw new CachedEnvelopeException(
                         CachedEntityError::REF_NOT_OBJECT,
                         sprintf('Reference key resolved to item of type "%s", expected CachedEntity object', gettype($item))
                     );
@@ -121,7 +121,7 @@ final readonly class CachedReferenceKey
 
             if ($this->targetChecksum) {
                 if (!$item->checksum || !$this->targetChecksum->equals($item->checksum)) {
-                    throw CachedEntityException::ChecksumError(
+                    throw CachedEnvelopeException::ChecksumError(
                         CachedEntityError::REF_BAD_CHECKSUM,
                         $this->targetChecksum,
                         $item->checksum
@@ -131,12 +131,12 @@ final readonly class CachedReferenceKey
 
             try {
                 return $item->getStoredItem();
-            } catch (CachedEntityException $e) {
+            } catch (CachedEnvelopeException $e) {
                 if ($e->error === CachedEntityError::IS_EXPIRED) {
                     if ($cache->deleteIfExpired) {
                         try {
                             $cache->delete($this->targetKey);
-                        } catch (CacheDriverException) {
+                        } catch (CacheStoreException) {
                         }
                     }
 

@@ -11,7 +11,7 @@ namespace Charcoal\Cache\Stored;
 use Charcoal\Buffers\Types\Bytes20;
 use Charcoal\Cache\CacheClient;
 use Charcoal\Cache\Enums\CachedEntityError;
-use Charcoal\Cache\Exceptions\CachedEntityException;
+use Charcoal\Cache\Exceptions\CachedEnvelopeException;
 
 /**
  * Represents a cached envelope that stores a value with optional checksum and TTL (time-to-live).
@@ -45,17 +45,17 @@ final readonly class CachedEnvelope
     }
 
     /**
-     * @throws CachedEntityException
+     * @throws CachedEnvelopeException
      */
     public function verifyChecksum(): void
     {
         if (!$this->checksum) {
-            throw new CachedEntityException(CachedEntityError::CHECKSUM_NOT_STORED);
+            throw new CachedEnvelopeException(CachedEntityError::CHECKSUM_NOT_STORED);
         }
 
         $compare = hash_hmac("sha1", $this->value, $this->key, true);
         if (!$this->checksum->equals($compare)) {
-            throw CachedEntityException::ChecksumError(
+            throw CachedEnvelopeException::ChecksumError(
                 CachedEntityError::BAD_CHECKSUM,
                 $this->checksum,
                 new Bytes20($compare)
@@ -64,14 +64,14 @@ final readonly class CachedEnvelope
     }
 
     /**
-     * @throws CachedEntityException
+     * @throws CachedEnvelopeException
      */
     public function getStoredItem(): int|float|string|null|bool|array|object
     {
         if ($this->ttl) {
             $epoch = time();
             if ($this->ttl > $epoch || ($epoch - $this->storedOn) >= $this->ttl) {
-                throw new CachedEntityException(CachedEntityError::IS_EXPIRED);
+                throw new CachedEnvelopeException(CachedEntityError::IS_EXPIRED);
             }
         }
 
@@ -81,7 +81,7 @@ final readonly class CachedEnvelope
 
         $obj = unserialize($this->value);
         if (!$obj) {
-            throw new CachedEntityException(CachedEntityError::UNSERIALIZE_FAIL);
+            throw new CachedEnvelopeException(CachedEntityError::UNSERIALIZE_FAIL);
         }
 
         return $obj;
@@ -142,7 +142,7 @@ final readonly class CachedEnvelope
     }
 
     /**
-     * @throws CachedEntityException
+     * @throws CachedEnvelopeException
      */
     public static function Open(
         CacheClient $cache,
@@ -164,7 +164,7 @@ final readonly class CachedEnvelope
 
         $cachedEntity = unserialize(rtrim(base64_decode(substr($serialized, $cache->serializePrefixLen))));
         if (!$cachedEntity instanceof self) {
-            throw new CachedEntityException(
+            throw new CachedEnvelopeException(
                 CachedEntityError::BAD_BYTES,
                 "Could not restore serialized CachedEntity object"
             );
