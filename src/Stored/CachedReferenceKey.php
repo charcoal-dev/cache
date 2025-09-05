@@ -6,19 +6,22 @@
 
 declare(strict_types=1);
 
-namespace Charcoal\Cache;
+namespace Charcoal\Cache\Stored;
 
-use Charcoal\Buffers\Frames\Bytes20;
+use Charcoal\Base\Encoding\Encoding;
+use Charcoal\Buffers\Types\Bytes20;
+use Charcoal\Cache\CacheArray;
+use Charcoal\Cache\CacheClient;
 use Charcoal\Cache\Enums\CachedEntityError;
 use Charcoal\Cache\Exceptions\CachedEntityException;
 use Charcoal\Cache\Exceptions\CacheDriverException;
 use Charcoal\Cache\Exceptions\CacheException;
 
 /**
- * Class CachedReferenceKey
- * @package Charcoal\Cache
+ * Represents a cached reference key that facilitates the serialization and deserialization
+ * of cache reference keys as well as resolving the actual cached entities via cache stores.
  */
-readonly class CachedReferenceKey
+final readonly class CachedReferenceKey
 {
     /**
      * @throws CachedEntityException
@@ -41,7 +44,7 @@ readonly class CachedReferenceKey
             $cacheStore->referenceKeysPrefix,
             $targetKeyServer ? $targetKeyServer->storageDriver->metaUniqueId() : "~",
             $targetKey,
-            $checksum ? $checksum->toBase16() : "*"
+            $checksum ? $checksum->encode(Encoding::Base16) : "*"
         );
 
         if (strlen($reference) > $cacheStore->plainStringsMaxLength) {
@@ -57,7 +60,7 @@ readonly class CachedReferenceKey
     /**
      * @throws CachedEntityException
      */
-    public static function Unserialize(CacheClient $cacheStore, string $serialized): static
+    public static function Unserialize(CacheClient $cacheStore, string $serialized): self
     {
         $matches = [];
         if (!preg_match(
@@ -73,13 +76,18 @@ readonly class CachedReferenceKey
 
         $targetServerId = $matches[1] ?? "";
         $targetChecksum = $matches[3] ?? "";
-        return new static(
+        return new self(
             $matches[2] ?? "",
             $targetServerId === "~" ? null : $targetServerId,
-            $targetChecksum === "*" ? null : Bytes20::fromBase16($targetChecksum)
+            $targetChecksum === "*" ? null : new Bytes20(Encoding::Base16->decode($targetChecksum))
         );
     }
 
+    /**
+     * @param string $targetKey
+     * @param string|null $targetServerId
+     * @param Bytes20|null $targetChecksum
+     */
     protected function __construct(
         public string   $targetKey,
         public ?string  $targetServerId = null,
@@ -100,7 +108,7 @@ readonly class CachedReferenceKey
             }
 
             $item = $cache->get($this->targetKey, returnCachedEntity: true, returnReferenceKeyObject: false);
-            if (!$item instanceof CachedEntity) {
+            if (!$item instanceof CachedEnvelope) {
                 if ($item) {
                     throw new CachedEntityException(
                         CachedEntityError::REF_NOT_OBJECT,

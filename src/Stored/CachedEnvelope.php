@@ -6,17 +6,20 @@
 
 declare(strict_types=1);
 
-namespace Charcoal\Cache;
+namespace Charcoal\Cache\Stored;
 
-use Charcoal\Buffers\Frames\Bytes20;
+use Charcoal\Buffers\Types\Bytes20;
+use Charcoal\Cache\CacheClient;
 use Charcoal\Cache\Enums\CachedEntityError;
 use Charcoal\Cache\Exceptions\CachedEntityException;
 
 /**
- * Class CachedEntity
- * @package Charcoal\Cache
+ * Represents a cached envelope that stores a value with optional checksum and TTL (time-to-live).
+ * This immutable class ensures integrity of the stored value by optionally attaching a checksum
+ * and provides methods for verifying it. It is used to manage various cacheable entities
+ * with support for serialization and restoration.
  */
-readonly class CachedEntity
+final readonly class CachedEnvelope
 {
     public string $type;
     public bool|int|float|string|null $value;
@@ -27,7 +30,7 @@ readonly class CachedEntity
         public string $key,
         mixed         $value,
         public ?int   $ttl = null,
-        bool          $createChecksum = true,
+        bool          $withChecksum = true,
     )
     {
         $this->type = gettype($value);
@@ -37,7 +40,7 @@ readonly class CachedEntity
             default => throw new \UnexpectedValueException(sprintf('Cannot store value of type "%s"', $this->type)),
         };
 
-        $this->checksum = $createChecksum ? new Bytes20(hash_hmac("sha1", $this->value, $this->key, true)) : null;
+        $this->checksum = $withChecksum ? new Bytes20(hash_hmac("sha1", $this->value, $this->key, true)) : null;
         $this->storedOn = time();
     }
 
@@ -84,20 +87,28 @@ readonly class CachedEntity
         return $obj;
     }
 
+    /**
+     * @param CacheClient $cache
+     * @param string $key
+     * @param mixed $value
+     * @param bool $withChecksum
+     * @param int|null $ttl
+     * @return int|string|self
+     */
     public static function Prepare(
         CacheClient $cache,
         string      $key,
         mixed       $value,
-        bool        $createChecksum,
+        bool        $withChecksum,
         ?int        $ttl = null
-    ): int|string|static
+    ): int|string|self
     {
-        if ($value instanceof static) {
+        if ($value instanceof self) {
             return $value;
         }
 
-        if ($createChecksum) {
-            return new static($key, $value, $ttl, true);
+        if ($withChecksum) {
+            return new self($key, $value, $ttl, true);
         }
 
         if (is_string($value) && strlen($value) <= $cache->plainStringsMaxLength) {
@@ -108,12 +119,17 @@ readonly class CachedEntity
             return $value;
         }
 
-        return new static($key, $value, $ttl, false);
+        return new self($key, $value, $ttl, false);
     }
 
-    public static function Serialize(
-        CacheClient $cache,
-        CachedEntity $entity
+    /**
+     * @param CacheClient $cache
+     * @param CachedEnvelope $entity
+     * @return string
+     */
+    public static function Seal(
+        CacheClient    $cache,
+        CachedEnvelope $entity
     ): string
     {
         $serialized = serialize($entity);
@@ -128,11 +144,11 @@ readonly class CachedEntity
     /**
      * @throws CachedEntityException
      */
-    public static function Restore(
+    public static function Open(
         CacheClient $cache,
-        string $serialized,
-        bool $expectInteger = false
-    ): int|string|static
+        string      $serialized,
+        bool        $expectInteger = false
+    ): int|string|self
     {
         if ($expectInteger && preg_match('/^-?\d+$/', $serialized)) {
             return intval($serialized);
@@ -147,7 +163,7 @@ readonly class CachedEntity
         }
 
         $cachedEntity = unserialize(rtrim(base64_decode(substr($serialized, $cache->serializePrefixLen))));
-        if (!$cachedEntity instanceof static) {
+        if (!$cachedEntity instanceof self) {
             throw new CachedEntityException(
                 CachedEntityError::BAD_BYTES,
                 "Could not restore serialized CachedEntity object"
