@@ -272,4 +272,36 @@ final class CachePool implements \IteratorAggregate, CacheClientInterface
     {
         return "pool:" . $this->poolId;
     }
+
+    /**
+     * Connects to all cache stores.
+     */
+    public function connect(): void
+    {
+        $this->bulkOp(function (CacheClient $store) {
+            $store->connect();
+        });
+    }
+
+    /**
+     * Disconnects from all cache stores.
+     */
+    public function disconnect(): void
+    {
+        $this->bulkOp(function (CacheClient $store) {
+            $store->disconnect();
+        });
+    }
+
+    /**
+     * Truncates all cache stores.
+     */
+    public function truncate(): bool
+    {
+        $this->bulkOp(function (CacheClient $store) {
+            $store->truncate();
+        });
+
+        return true;
+    }
 }

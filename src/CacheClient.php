@@ -9,8 +9,10 @@ declare(strict_types=1);
 namespace Charcoal\Cache;
 
 use Charcoal\Buffers\Types\Bytes20;
-use Charcoal\Cache\Enums\CachedEntityError;
+use Charcoal\Cache\Enums\CachedEnvelopeError;
 use Charcoal\Cache\Events\CacheEvents;
+use Charcoal\Cache\Events\Connection\ConnectionError;
+use Charcoal\Cache\Events\Connection\ConnectionSuccess;
 use Charcoal\Cache\Exceptions\CachedEnvelopeException;
 use Charcoal\Cache\Exceptions\CacheStoreConnectionException;
 use Charcoal\Cache\Exceptions\CacheStoreException;
@@ -39,13 +41,12 @@ class CacheClient implements CacheClientInterface, EventStoreOwnerInterface
         public bool                           $deleteIfExpired = true,
         public readonly string                $serializedEntityPrefix = "~~charcoalCacheSerializedItem",
         public readonly string                $referenceKeysPrefix = "~~charcoalCachedRef",
-        public readonly int                   $plainStringsMaxLength = 0x80,
-        bool                                  $staticScopeReplaceExisting = false
+        public readonly int                   $plainStringsMaxLength = 0x80
     )
     {
         $this->serializePrefixLen = strlen($this->serializedEntityPrefix);
         $this->store->createLink($this);
-        $this->events = new CacheEvents($this, $staticScopeReplaceExisting);
+        $this->events = new CacheEvents($this);
     }
 
     /**
@@ -171,7 +172,7 @@ class CacheClient implements CacheClientInterface, EventStoreOwnerInterface
         try {
             return $stored->getStoredItem();
         } catch (CachedEnvelopeException $e) {
-            if ($e->error === CachedEntityError::IS_EXPIRED) {
+            if ($e->error === CachedEnvelopeError::IS_EXPIRED) {
                 if ($this->deleteIfExpired) {
                     try {
                         $this->delete($key);
@@ -207,7 +208,9 @@ class CacheClient implements CacheClientInterface, EventStoreOwnerInterface
             }
 
             $this->store->connect();
+            $this->events->dispatch(new ConnectionSuccess($this->store));
         } catch (\Exception $e) {
+            $this->events->dispatch(new ConnectionError($this->store, $e));
             throw new CacheStoreConnectionException($e);
         }
     }
@@ -235,7 +238,7 @@ class CacheClient implements CacheClientInterface, EventStoreOwnerInterface
     /**
      * @throws CacheStoreOpException
      */
-    public function flush(): bool
+    public function truncate(): bool
     {
         try {
             return $this->store->truncate();
