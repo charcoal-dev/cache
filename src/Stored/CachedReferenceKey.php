@@ -11,7 +11,7 @@ namespace Charcoal\Cache\Stored;
 use Charcoal\Base\Encoding\Encoding;
 use Charcoal\Buffers\Types\Bytes20;
 use Charcoal\Cache\CacheClient;
-use Charcoal\Cache\Enums\CachedEntityError;
+use Charcoal\Cache\Enums\CachedEnvelopeError;
 use Charcoal\Cache\Exceptions\CachedEnvelopeException;
 use Charcoal\Cache\Exceptions\CacheStoreException;
 use Charcoal\Cache\Exceptions\CacheException;
@@ -49,7 +49,7 @@ final readonly class CachedReferenceKey
 
         if (strlen($reference) > $cacheStore->plainStringsMaxLength) {
             throw new CachedEnvelopeException(
-                CachedEntityError::REF_KEY_LENGTH,
+                CachedEnvelopeError::REF_KEY_LENGTH,
                 sprintf("Reference key exceeds plain string limit of %d bytes", $cacheStore->plainStringsMaxLength)
             );
         }
@@ -69,7 +69,7 @@ final readonly class CachedReferenceKey
                 $matches
             ) || count($matches) !== 4) {
             throw new CachedEnvelopeException(
-                CachedEntityError::REF_DECODE_ERROR,
+                CachedEnvelopeError::REF_DECODE_ERROR,
                 "Malformed reference pointer"
             );
         }
@@ -111,7 +111,7 @@ final readonly class CachedReferenceKey
             if (!$item instanceof CachedEnvelope) {
                 if ($item) {
                     throw new CachedEnvelopeException(
-                        CachedEntityError::REF_NOT_OBJECT,
+                        CachedEnvelopeError::REF_NOT_OBJECT,
                         sprintf('Reference key resolved to item of type "%s", expected CachedEntity object', gettype($item))
                     );
                 }
@@ -122,7 +122,7 @@ final readonly class CachedReferenceKey
             if ($this->targetChecksum) {
                 if (!$item->checksum || !$this->targetChecksum->equals($item->checksum)) {
                     throw CachedEnvelopeException::ChecksumError(
-                        CachedEntityError::REF_BAD_CHECKSUM,
+                        CachedEnvelopeError::REF_BAD_CHECKSUM,
                         $this->targetChecksum,
                         $item->checksum
                     );
@@ -132,7 +132,7 @@ final readonly class CachedReferenceKey
             try {
                 return $item->getStoredItem();
             } catch (CachedEnvelopeException $e) {
-                if ($e->error === CachedEntityError::IS_EXPIRED) {
+                if ($e->error === CachedEnvelopeError::IS_EXPIRED) {
                     if ($cache->deleteIfExpired) {
                         try {
                             $cache->delete($this->targetKey);

@@ -10,7 +10,7 @@ namespace Charcoal\Cache\Stored;
 
 use Charcoal\Buffers\Types\Bytes20;
 use Charcoal\Cache\CacheClient;
-use Charcoal\Cache\Enums\CachedEntityError;
+use Charcoal\Cache\Enums\CachedEnvelopeError;
 use Charcoal\Cache\Exceptions\CachedEnvelopeException;
 
 /**
@@ -50,13 +50,13 @@ final readonly class CachedEnvelope
     public function verifyChecksum(): void
     {
         if (!$this->checksum) {
-            throw new CachedEnvelopeException(CachedEntityError::CHECKSUM_NOT_STORED);
+            throw new CachedEnvelopeException(CachedEnvelopeError::CHECKSUM_NOT_STORED);
         }
 
         $compare = hash_hmac("sha1", $this->value, $this->key, true);
         if (!$this->checksum->equals($compare)) {
             throw CachedEnvelopeException::ChecksumError(
-                CachedEntityError::BAD_CHECKSUM,
+                CachedEnvelopeError::BAD_CHECKSUM,
                 $this->checksum,
                 new Bytes20($compare)
             );
@@ -71,7 +71,7 @@ final readonly class CachedEnvelope
         if ($this->ttl) {
             $epoch = time();
             if ($this->ttl > $epoch || ($epoch - $this->storedOn) >= $this->ttl) {
-                throw new CachedEnvelopeException(CachedEntityError::IS_EXPIRED);
+                throw new CachedEnvelopeException(CachedEnvelopeError::IS_EXPIRED);
             }
         }
 
@@ -81,7 +81,7 @@ final readonly class CachedEnvelope
 
         $obj = unserialize($this->value);
         if (!$obj) {
-            throw new CachedEnvelopeException(CachedEntityError::UNSERIALIZE_FAIL);
+            throw new CachedEnvelopeException(CachedEnvelopeError::UNSERIALIZE_FAIL);
         }
 
         return $obj;
@@ -165,7 +165,7 @@ final readonly class CachedEnvelope
         $cachedEntity = unserialize(rtrim(base64_decode(substr($serialized, $cache->serializePrefixLen))));
         if (!$cachedEntity instanceof self) {
             throw new CachedEnvelopeException(
-                CachedEntityError::BAD_BYTES,
+                CachedEnvelopeError::BAD_BYTES,
                 "Could not restore serialized CachedEntity object"
             );
         }

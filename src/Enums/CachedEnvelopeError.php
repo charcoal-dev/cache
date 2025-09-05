@@ -9,10 +9,10 @@ declare(strict_types=1);
 namespace Charcoal\Cache\Enums;
 
 /**
- * Class CachedEntityError
- * @package Charcoal\Cache\Enums
+ * Enumeration representing potential errors related to cached envelope operations.
+ * Each case represents a specific error type and is associated with an integer value.
  */
-enum CachedEntityError: int
+enum CachedEnvelopeError: int
 {
     case IS_EXPIRED = 0x64;
     case BAD_BYTES = 0xc8;
