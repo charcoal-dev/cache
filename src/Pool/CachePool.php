@@ -13,7 +13,7 @@ use Charcoal\Base\Registry\Traits\RegistryKeysLowercaseTrimmed;
 use Charcoal\Buffers\Types\Bytes20;
 use Charcoal\Cache\CacheClient;
 use Charcoal\Cache\Exceptions\CachePoolException;
-use Charcoal\Cache\Exceptions\CacheDriverConnectionException;
+use Charcoal\Cache\Exceptions\CacheStoreConnectionException;
 use Charcoal\Cache\Exceptions\CacheException;
 use Charcoal\Contracts\Storage\Cache\CacheClientInterface;
 use Charcoal\Contracts\Storage\Enums\StorageType;
@@ -93,7 +93,7 @@ final class CachePool implements \IteratorAggregate, CacheClientInterface
             if (!$store->isConnected()) {
                 try {
                     $store->connect();
-                } catch (CacheDriverConnectionException) {
+                } catch (CacheStoreConnectionException) {
                 }
             }
 
