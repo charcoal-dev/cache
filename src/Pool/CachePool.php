@@ -43,8 +43,8 @@ final class CachePool implements \IteratorAggregate, CacheClientInterface
      */
     public function addServer(CacheClient $cache): self
     {
-        if (isset($this->instances[$cache->storageDriver->getId()])) {
-            $this->instances[$cache->storageDriver->getId()] = $cache;
+        if (isset($this->instances[$cache->store->getId()])) {
+            $this->instances[$cache->store->getId()] = $cache;
             $this->count++;
         }
 
