@@ -8,47 +8,53 @@ declare(strict_types=1);
 
 namespace Charcoal\Cache;
 
-use Charcoal\Base\Contracts\Storage\StorageProviderInterface;
-use Charcoal\Base\Enums\StorageType;
-use Charcoal\Buffers\Frames\Bytes20;
-use Charcoal\Cache\Contracts\CacheApiInterface;
-use Charcoal\Cache\Contracts\CacheDriverInterface;
+use Charcoal\Buffers\Types\Bytes20;
 use Charcoal\Cache\Enums\CachedEntityError;
 use Charcoal\Cache\Events\CacheEvents;
-use Charcoal\Cache\Exceptions\CachedEntityException;
-use Charcoal\Cache\Exceptions\CacheDriverConnectionException;
-use Charcoal\Cache\Exceptions\CacheDriverException;
+use Charcoal\Cache\Exceptions\CachedEnvelopeException;
+use Charcoal\Cache\Exceptions\CacheStoreConnectionException;
+use Charcoal\Cache\Exceptions\CacheStoreException;
+use Charcoal\Cache\Exceptions\CacheStoreOpException;
+use Charcoal\Cache\Stored\CachedEnvelope;
+use Charcoal\Cache\Stored\CachedReferenceKey;
+use Charcoal\Contracts\Storage\Cache\CacheAdapterInterface;
+use Charcoal\Contracts\Storage\Cache\CacheClientInterface;
+use Charcoal\Contracts\Storage\Enums\StorageType;
 use Charcoal\Events\Contracts\EventStoreOwnerInterface;
 
 /**
- * Class CacheClient
- * @package Charcoal\Cache
+ * Implements caching functionalities with support for storage management, event handling,
+ * and cached entity management. This class interacts with the underlying storage driver
+ * to provide efficient caching operations, reference key management, and checksum validation.
  */
-class CacheClient implements CacheApiInterface, StorageProviderInterface, EventStoreOwnerInterface
+class CacheClient implements CacheClientInterface, EventStoreOwnerInterface
 {
     public readonly CacheEvents $events;
     public readonly int $serializePrefixLen;
 
     public function __construct(
-        public readonly CacheDriverInterface $storageDriver,
-        public bool                          $useChecksumsByDefault = false,
-        public bool                          $nullIfExpired = true,
-        public bool                          $deleteIfExpired = true,
-        public readonly string               $serializedEntityPrefix = "~~charcoalCacheSerializedItem",
-        public readonly string               $referenceKeysPrefix = "~~charcoalCachedRef",
-        public readonly int                  $plainStringsMaxLength = 0x80,
-        bool                                 $staticScopeReplaceExisting = false
+        public readonly CacheAdapterInterface $store,
+        public bool                           $useChecksumsByDefault = false,
+        public bool                           $nullIfExpired = true,
+        public bool                           $deleteIfExpired = true,
+        public readonly string                $serializedEntityPrefix = "~~charcoalCacheSerializedItem",
+        public readonly string                $referenceKeysPrefix = "~~charcoalCachedRef",
+        public readonly int                   $plainStringsMaxLength = 0x80,
+        bool                                  $staticScopeReplaceExisting = false
     )
     {
         $this->serializePrefixLen = strlen($this->serializedEntityPrefix);
-        $this->storageDriver->createLink($this);
+        $this->store->createLink($this);
         $this->events = new CacheEvents($this, $staticScopeReplaceExisting);
     }
 
+    /**
+     * @return array
+     */
     public function __serialize(): array
     {
         return [
-            "storageDriver" => $this->storageDriver,
+            "store" => $this->store,
             "useChecksumsByDefault" => $this->useChecksumsByDefault,
             "nullIfExpired" => $this->nullIfExpired,
             "deleteIfExpired" => $this->deleteIfExpired,
@@ -60,9 +66,13 @@ class CacheClient implements CacheApiInterface, StorageProviderInterface, EventS
         ];
     }
 
+    /**
+     * @param array $data
+     * @return void
+     */
     public function __unserialize(array $data): void
     {
-        $this->storageDriver = $data["storageDriver"];
+        $this->store = $data["store"];
         $this->useChecksumsByDefault = $data["useChecksumsByDefault"];
         $this->nullIfExpired = $data["nullIfExpired"];
         $this->deleteIfExpired = $data["deleteIfExpired"];
@@ -71,23 +81,33 @@ class CacheClient implements CacheApiInterface, StorageProviderInterface, EventS
         $this->plainStringsMaxLength = $data["plainStringsMaxLength"];
         $this->serializePrefixLen = $data["serializePrefixLen"];
         $this->events = $data["events"];
-        $this->storageDriver->createLink($this);
+        $this->store->createLink($this);
     }
 
-    public function set(string $key, mixed $value, ?int $ttl = null, ?bool $createChecksum = null): bool|Bytes20
+    /**
+     * Set a value in the cache.
+     * @throws CacheStoreOpException
+     */
+    public function set(string $key, mixed $value, ?int $ttl = null, ?bool $withChecksum = null): bool|Bytes20
     {
-        $value = CachedEntity::Prepare($this, $key, $value, $createChecksum ?? $this->useChecksumsByDefault, $ttl);
-        if ($value instanceof CachedEntity) {
+        $value = CachedEnvelope::Prepare($this, $key, $value, $createChecksum ?? $this->useChecksumsByDefault, $ttl);
+        if ($value instanceof CachedEnvelope) {
             $checksum = $value->checksum;
-            $value = CachedEntity::Serialize($this, $value);
+            $value = CachedEnvelope::Seal($this, $value);
         }
 
-        $this->storageDriver->store($key, $value, $ttl);
+        try {
+            $this->store->set($key, $value, $ttl);
+        } catch (\Exception $e) {
+            throw new CacheStoreOpException($e);
+        }
+
         return $checksum ?? true;
     }
 
     /**
-     * @throws CachedEntityException
+     * @throws CacheStoreOpException
+     * @throws CachedEnvelopeException
      */
     public function createReferenceKey(
         string       $referenceKey,
@@ -106,23 +126,29 @@ class CacheClient implements CacheApiInterface, StorageProviderInterface, EventS
     }
 
     /**
-     * @throws CachedEntityException
+     * @throws CacheStoreOpException
+     * @throws CachedEnvelopeException
      */
     public function get(
         string $key,
-        bool   $returnCachedEntity = false,
+        bool   $returnEnvelope = false,
         bool   $returnReferenceKeyObject = true,
         bool   $expectInteger = false,
         ?bool  $verifyChecksum = null
     ): int|string|null|array|object|bool
     {
-        $stored = $this->storageDriver->resolve($key);
+        try {
+            $stored = $this->store->get($key);
+        } catch (\Exception $e) {
+            throw new CacheStoreOpException($e);
+        }
+
         if (!is_string($stored)) {
             return $stored;
         }
 
-        $stored = CachedEntity::Restore($this, $stored, $expectInteger);
-        if (!$stored instanceof CachedEntity) {
+        $stored = CachedEnvelope::Open($this, $stored, $expectInteger);
+        if (!$stored instanceof CachedEnvelope) {
             if (is_string($stored) && str_starts_with($stored, $this->referenceKeysPrefix) && $returnReferenceKeyObject) {
                 return CachedReferenceKey::Unserialize($this, $stored);
             }
@@ -130,7 +156,7 @@ class CacheClient implements CacheApiInterface, StorageProviderInterface, EventS
             return $stored;
         }
 
-        if ($returnCachedEntity) {
+        if ($returnEnvelope) {
             return $stored;
         }
 
@@ -144,12 +170,12 @@ class CacheClient implements CacheApiInterface, StorageProviderInterface, EventS
 
         try {
             return $stored->getStoredItem();
-        } catch (CachedEntityException $e) {
+        } catch (CachedEnvelopeException $e) {
             if ($e->error === CachedEntityError::IS_EXPIRED) {
                 if ($this->deleteIfExpired) {
                     try {
                         $this->delete($key);
-                    } catch (CacheDriverException) {
+                    } catch (CacheStoreException) {
                     }
                 }
 
@@ -162,68 +188,112 @@ class CacheClient implements CacheApiInterface, StorageProviderInterface, EventS
         }
     }
 
+    /**
+     * @return bool
+     */
     public function isConnected(): bool
     {
-        return $this->storageDriver->isConnected();
+        return $this->store->isConnected();
     }
 
     /**
-     * @throws CacheDriverConnectionException
+     * @throws CacheStoreConnectionException
      */
     public function connect(): void
     {
-        if ($this->isConnected()) {
-            return;
+        try {
+            if ($this->isConnected()) {
+                return;
+            }
+
+            $this->store->connect();
+        } catch (\Exception $e) {
+            throw new CacheStoreConnectionException($e);
         }
-
-        $this->storageDriver->connect();
-    }
-
-    public function disconnect(): void
-    {
-        $this->storageDriver->disconnect();
     }
 
     /**
-     * @throws CacheDriverException
+     * @return void
+     */
+    public function disconnect(): void
+    {
+        $this->store->disconnect();
+    }
+
+    /**
+     * @throws CacheStoreOpException
      */
     public function delete(string $key): bool
     {
-        return $this->storageDriver->delete($key);
+        try {
+            return $this->store->delete($key);
+        } catch (\Exception $e) {
+            throw new CacheStoreOpException($e);
+        }
     }
 
+    /**
+     * @throws CacheStoreOpException
+     */
     public function flush(): bool
     {
-        return $this->storageDriver->truncate();
+        try {
+            return $this->store->truncate();
+        } catch (\Exception $e) {
+            throw new CacheStoreOpException($e);
+        }
     }
 
+    /**
+     * @throws CacheStoreOpException
+     */
     public function has(string $key): bool
     {
-        return $this->storageDriver->isStored($key);
+        try {
+            return $this->store->has($key);
+        } catch (\Exception $e) {
+            throw new CacheStoreOpException($e);
+        }
     }
 
+    /**
+     * @throws CacheStoreOpException
+     */
     public function ping(): bool
     {
-        if (!$this->storageDriver->metaPingSupported()) {
+        if (!$this->store->supportsPing()) {
             return false;
         }
 
-        return $this->storageDriver->ping();
+        try {
+            return $this->store->ping();
+        } catch (\Exception $e) {
+            throw new CacheStoreOpException($e);
+        }
     }
 
+    /**
+     * @return StorageType
+     */
     public function storageType(): StorageType
     {
         return StorageType::Cache;
     }
 
+    /**
+     * @return string
+     */
     public function storageProviderId(): string
     {
-        return $this->storageDriver->metaUniqueId();
+        return $this->store->getId();
     }
 
+    /**
+     * @return string
+     */
     public function eventsUniqueContextKey(): string
     {
-        return $this->storageDriver->metaUniqueId();
+        return $this->store->getId();
     }
 }
 
