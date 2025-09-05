@@ -19,4 +19,3 @@ class CacheStoreException extends CacheException
         parent::__construct($previous->getMessage(), $previous->getCode(), previous: $previous);
     }
 }
-
