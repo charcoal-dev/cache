@@ -9,21 +9,47 @@ declare(strict_types=1);
 namespace Charcoal\Cache\Events;
 
 use Charcoal\Cache\CacheClient;
+use Charcoal\Cache\Events\Connection\ConnectionError;
+use Charcoal\Cache\Events\Connection\ConnectionStateContext;
+use Charcoal\Cache\Events\Connection\ConnectionSuccess;
+use Charcoal\Events\BehaviorEvent;
+use Charcoal\Events\Dispatch\DispatchReport;
+use Charcoal\Events\Subscriptions\Subscription;
 
 /**
- * Class CacheEvents
- * @package Charcoal\Cache\Events
+ * Represents cache-related events, such as connection changes or state transitions.
+ * Extends functionality from the BehaviorEvent class and provides specific event-handling
+ * capabilities for cache interactions.
  */
-readonly class CacheEvents
+final class CacheEvents extends BehaviorEvent
 {
-    public ConnectionEvent $connectionState;
+    /**
+     * @param CacheClient $client
+     */
+    public function __construct(public readonly CacheClient $client)
+    {
+        parent::__construct("connectionEvents", [
+            ConnectionStateContext::class,
+            ConnectionSuccess::class,
+            ConnectionError::class,
+        ]);
+    }
 
     /**
-     * @param CacheClient $cache
-     * @param bool $staticScopeReplaceExisting
+     * @return Subscription
      */
-    public function __construct(CacheClient $cache, bool $staticScopeReplaceExisting)
+    public function subscribe(): Subscription
     {
-        $this->connectionState = new ConnectionEvent($cache, $staticScopeReplaceExisting);
+        return $this->createSubscription("cache-conn-event-" .
+            count($this->subscribers()) . "-" . substr(uniqid(), 0, 4));
+    }
+
+    /**
+     * @param ConnectionStateContext $context
+     * @return DispatchReport
+     */
+    public function dispatch(ConnectionStateContext $context): DispatchReport
+    {
+        return $this->dispatchEvent($context);
     }
 }

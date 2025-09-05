@@ -11,10 +11,10 @@ namespace Charcoal\Cache\Events\Connection;
 use Charcoal\Contracts\Storage\Cache\CacheAdapterInterface;
 
 /**
- * Class ConnectionSuccess
- * @package Charcoal\Cache\Events\Connection
+ * Represents a successful state of a connection, implementing the ConnectionStateContext interface.
+ * This class is readonly, ensuring immutability of its properties after initialization.
  */
-readonly class ConnectionSuccess implements ConnectionStateContext
+final readonly class ConnectionSuccess implements ConnectionStateContext
 {
     public function __construct(
         public CacheAdapterInterface $store
