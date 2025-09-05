@@ -6,11 +6,17 @@
 
 declare(strict_types=1);
 
-namespace Charcoal\Cache\Tests\Polyfill;
+namespace Charcoal\Cache\Tests\Stubs;
 
-use Charcoal\Cache\Contracts\CacheDriverInterface;
+use Charcoal\Contracts\Storage\Cache\CacheAdapterInterface;
+use Charcoal\Contracts\Storage\Cache\CacheClientInterface;
 
-class LocalCache implements CacheDriverInterface
+/**
+ * LocalCache is an implementation of the CacheAdapterInterface designed for caching data locally.
+ * This class manages a collection of cached items and handles basic operations such as storing,
+ * retrieving, and deleting cached data.
+ */
+class LocalCache implements CacheAdapterInterface
 {
     private array $items = [];
 
@@ -18,7 +24,7 @@ class LocalCache implements CacheDriverInterface
     {
     }
 
-    public function metaUniqueId(): string
+    public function getId(): string
     {
         return static::class . "_" . $this->salt;
     }
@@ -36,7 +42,7 @@ class LocalCache implements CacheDriverInterface
     {
     }
 
-    public function metaPingSupported(): bool
+    public function supportsPing(): bool
     {
         return false;
     }
@@ -46,28 +52,28 @@ class LocalCache implements CacheDriverInterface
         return false;
     }
 
-    public function createLink(\Charcoal\Cache\CacheClient $cache): void
+    public function createLink(CacheClientInterface $cache): void
     {
     }
 
-    public function store(string $key, int|string $value, ?int $ttl = null): void
+    public function set(string $key, int|string $value, ?int $ttl = null): void
     {
         $this->items[$key] = strval($value);
     }
 
-    public function resolve(string $key): int|string|null|bool
+    public function get(string $key): int|string|null|bool
     {
         return $this->items[$key] ?? null;
     }
 
-    public function isStored(string $key): bool
+    public function has(string $key): bool
     {
         return isset($this->items[$key]);
     }
 
     public function delete(string $key): bool
     {
-        if ($this->isStored($key)) {
+        if ($this->has($key)) {
             unset($this->items[$key]);
         }
 

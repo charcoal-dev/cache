@@ -22,6 +22,7 @@ use Charcoal\Contracts\Storage\Enums\StorageType;
  * This class implements a cache pooling system that manages multiple cache clients.
  * It allows adding, retrieving, and performing operations on cache clients under a collective or individual basis.
  * @use InstancedObjectsRegistry<array, CacheClient>
+ * @property array<string, CacheClient> $instances
  */
 final class CachePool implements \IteratorAggregate, CacheClientInterface
 {
@@ -43,7 +44,7 @@ final class CachePool implements \IteratorAggregate, CacheClientInterface
      */
     public function addServer(CacheClient $cache): self
     {
-        if (isset($this->instances[$cache->store->getId()])) {
+        if (!isset($this->instances[$cache->store->getId()])) {
             $this->instances[$cache->store->getId()] = $cache;
             $this->count++;
         }
@@ -129,9 +130,9 @@ final class CachePool implements \IteratorAggregate, CacheClientInterface
         $errors = [];
         foreach ($this->instances as $store) {
             try {
-                $success[$store->storageDriver->metaUniqueId()] = call_user_func_array($callback, [$store]);
+                $success[$store->store->getId()] = call_user_func_array($callback, [$store]);
             } catch (\Exception $e) {
-                $errors[$store->storageDriver->metaUniqueId()] = $e;
+                $errors[$store->store->getId()] = $e;
             }
         }
 

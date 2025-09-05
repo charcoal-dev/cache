@@ -8,13 +8,13 @@ declare(strict_types=1);
 
 namespace Charcoal\Cache\Tests;
 
-use Charcoal\Buffers\Frames\Bytes20;
+use Charcoal\Buffers\Types\Bytes20;
 use Charcoal\Cache\CacheClient;
-use Charcoal\Cache\CachedEntity;
 use Charcoal\Cache\Exceptions\CacheException;
+use Charcoal\Cache\Stored\CachedEnvelope;
 use Charcoal\Cache\Tests\Fixtures\SampleObjectA;
 use Charcoal\Cache\Tests\Fixtures\SampleObjectB;
-use Charcoal\Cache\Tests\Polyfill\LocalCache;
+use Charcoal\Cache\Tests\Stubs\LocalCache;
 
 /**
  * Class CacheTest
@@ -27,8 +27,8 @@ class CacheTest extends \PHPUnit\Framework\TestCase
      */
     public function testNullIfExpired(): void
     {
-        $cacheStore1 = new CacheClient(new LocalCache(), nullIfExpired: false, staticScopeReplaceExisting: true);
-        $cacheStore2 = new CacheClient(new LocalCache(), nullIfExpired: true, staticScopeReplaceExisting: true);
+        $cacheStore1 = new CacheClient(new LocalCache(), nullIfExpired: false);
+        $cacheStore2 = new CacheClient(new LocalCache(), nullIfExpired: true);
         $item = new SampleObjectB("char", "coal");
         $cacheStore1->set("testKey", $item, 2);
         $cacheStore2->set("testKey", $item, 2);
@@ -43,11 +43,12 @@ class CacheTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @return void
-     * @throws \Charcoal\Cache\Exceptions\CachedEntityException
+     * @throws \Charcoal\Cache\Exceptions\CacheStoreOpException
+     * @throws \Charcoal\Cache\Exceptions\CachedEnvelopeException
      */
     public function testDeleteIfExpired(): void
     {
-        $cacheStore = new CacheClient(new LocalCache(), nullIfExpired: true, deleteIfExpired: true, staticScopeReplaceExisting: true);
+        $cacheStore = new CacheClient(new LocalCache(), nullIfExpired: true, deleteIfExpired: true);
         $item = new SampleObjectB("char", "coal");
         $cacheStore->set("testItem", $item, 2);
         $this->assertTrue($cacheStore->has("testItem"));
@@ -59,36 +60,39 @@ class CacheTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @return void
-     * @throws \Charcoal\Cache\Exceptions\CachedEntityException
+     * @throws \Charcoal\Cache\Exceptions\CacheStoreOpException
+     * @throws \Charcoal\Cache\Exceptions\CachedEnvelopeException
      */
     public function testChecksum(): void
     {
-        $cacheStore = new CacheClient(new LocalCache(), staticScopeReplaceExisting: true);
-        $checksum = $cacheStore->set("test", "some-value", createChecksum: true);
+        $cacheStore = new CacheClient(new LocalCache());
+        $checksum = $cacheStore->set("test", "some-value", withChecksum: true);
         $this->assertInstanceOf(Bytes20::class, $checksum);
-        /** @var CachedEntity $value */
-        $value = $cacheStore->get("test", returnCachedEntity: true);
-        $this->assertEquals(20, $value->checksum->len());
+        /** @var CachedEnvelope $value */
+        $value = $cacheStore->get("test", returnEnvelope: true);
+        $this->assertEquals(20, $value->checksum->length());
         $this->assertTrue($checksum->equals($value->checksum));
     }
 
     /**
      * @return void
+     * @throws \Charcoal\Cache\Exceptions\CacheStoreOpException
      */
     public function testNoChecksum(): void
     {
-        $cacheStore = new CacheClient(new LocalCache(), useChecksumsByDefault: false, staticScopeReplaceExisting: true);
+        $cacheStore = new CacheClient(new LocalCache(), useChecksumsByDefault: false);
         $set1 = $cacheStore->set("test", new SampleObjectA(1, "test", "test@test.com", new SampleObjectB("a", "b")));
         $this->assertIsBool($set1);
     }
 
     /**
      * @return void
+     * @throws \Charcoal\Cache\Exceptions\CacheStoreOpException
      */
     public function testChecksumByDefault(): void
     {
-        $cacheStore = new CacheClient(new LocalCache(), useChecksumsByDefault: true, staticScopeReplaceExisting: true);
+        $cacheStore = new CacheClient(new LocalCache(), useChecksumsByDefault: true);
         $set1 = $cacheStore->set("test", new SampleObjectA(1, "test", "test@test.com", new SampleObjectB("a", "b")));
-        $this->assertInstanceOf(\Charcoal\Buffers\Frames\Bytes20::class, $set1);
+        $this->assertInstanceOf(\Charcoal\Buffers\Types\Bytes20::class, $set1);
     }
 }

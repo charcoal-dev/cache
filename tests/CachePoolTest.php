@@ -9,25 +9,25 @@ declare(strict_types=1);
 namespace Charcoal\Cache\Tests;
 
 use Charcoal\Cache\CacheClient;
-use Charcoal\Cache\CacheArray;
+use Charcoal\Cache\Pool\CachePool;
 use Charcoal\Cache\Tests\Fixtures\SampleObjectA;
 use Charcoal\Cache\Tests\Fixtures\SampleObjectB;
-use Charcoal\Cache\Tests\Polyfill\LocalCache;
+use Charcoal\Cache\Tests\Stubs\LocalCache;
 
 /**
- * Class CacheArrayTest
+ * This class contains test cases for validating the functionality and behavior of a cache pool.
  */
-class CacheArrayTest extends \PHPUnit\Framework\TestCase
+class CachePoolTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @return void
      */
     public function testUniqueKeysAndIterator(): void
     {
-        $cacheStore1 = new CacheClient(new LocalCache(1), staticScopeReplaceExisting: true);
-        $cacheStore1a = new CacheClient(new LocalCache(1), staticScopeReplaceExisting: true); // This generates same metaUniqueId as above
-        $cacheStore2 = new CacheClient(new LocalCache(2), staticScopeReplaceExisting: true);
-        $cacheArray = new CacheArray();
+        $cacheStore1 = new CacheClient(new LocalCache(1));
+        $cacheStore1a = new CacheClient(new LocalCache(1)); // This generates same identifier as above
+        $cacheStore2 = new CacheClient(new LocalCache(2));
+        $cacheArray = new CachePool("pool_one");
         $cacheArray->addServer($cacheStore1)
             ->addServer($cacheStore1a)
             ->addServer($cacheStore2);
@@ -38,21 +38,21 @@ class CacheArrayTest extends \PHPUnit\Framework\TestCase
         foreach ($cacheArray as $store) {
             $iteratorCount++;
             $this->assertInstanceOf(CacheClient::class, $store);
-            $this->assertEquals($iteratorCount, $store->storageDriver->salt);
+            $this->assertEquals($iteratorCount, $store->store->salt);
         }
     }
 
     /**
      * @return void
-     * @throws \Charcoal\Cache\Exceptions\CacheDriverOpException
+     * @throws \Charcoal\Cache\Exceptions\CacheStoreOpException
      * @throws \Charcoal\Cache\Exceptions\CacheException
      */
     public function testBulkOps1(): void
     {
-        $cacheStore1 = new CacheClient(new LocalCache(1), staticScopeReplaceExisting: true);
-        $cacheStore2 = new CacheClient(new LocalCache(2), staticScopeReplaceExisting: true);
-        $cacheStore3 = new CacheClient(new LocalCache(3), staticScopeReplaceExisting: true);
-        $cacheArray = new CacheArray();
+        $cacheStore1 = new CacheClient(new LocalCache(1));
+        $cacheStore2 = new CacheClient(new LocalCache(2));
+        $cacheStore3 = new CacheClient(new LocalCache(3));
+        $cacheArray = new CachePool("pool_two");
         $cacheArray->addServer($cacheStore1)
             ->addServer($cacheStore2)
             ->addServer($cacheStore3);
@@ -65,7 +65,7 @@ class CacheArrayTest extends \PHPUnit\Framework\TestCase
 
         $cacheStore2->delete("testExampleModel");
 
-        $bulkHave = $cacheArray->allHave("testExampleModel");
+        $bulkHave = $cacheArray->haveInAll("testExampleModel");
         $this->assertEquals(3, $bulkHave->total);
         $this->assertEquals(3, $bulkHave->success);
         $this->assertEquals(0, $bulkHave->exceptions);
@@ -83,14 +83,14 @@ class CacheArrayTest extends \PHPUnit\Framework\TestCase
 
         $this->assertCount(2, $trueServers);
         $this->assertCount(1, $falseServers);
-        $this->assertEquals($cacheStore2->storageDriver->metaUniqueId(), $falseServers[0]);
+        $this->assertEquals($cacheStore2->store->getId(), $falseServers[0]);
 
         $read1 = $cacheArray->get("testExampleModel");
         $this->assertInstanceOf(SampleObjectA::class, $read1);
         $readAll = $cacheArray->getFromAll("testExampleModel");
-        $this->assertInstanceOf(SampleObjectA::class, $readAll->successList[$cacheStore1->storageDriver->metaUniqueId()]);
-        $this->assertNull($readAll->successList[$cacheStore2->storageDriver->metaUniqueId()], "This was deleted, should return NULL");
-        $this->assertInstanceOf(SampleObjectA::class, $readAll->successList[$cacheStore3->storageDriver->metaUniqueId()]);
+        $this->assertInstanceOf(SampleObjectA::class, $readAll->successList[$cacheStore1->store->getId()]);
+        $this->assertNull($readAll->successList[$cacheStore2->store->getId()], "This was deleted, should return NULL");
+        $this->assertInstanceOf(SampleObjectA::class, $readAll->successList[$cacheStore3->store->getId()]);
     }
 
     /**
@@ -99,10 +99,10 @@ class CacheArrayTest extends \PHPUnit\Framework\TestCase
      */
     public function testPrimaryOps1(): void
     {
-        $cacheStore1 = new CacheClient(new LocalCache(1), staticScopeReplaceExisting: true);
-        $cacheStore2 = new CacheClient(new LocalCache(2), staticScopeReplaceExisting: true);
-        $cacheStore3 = new CacheClient(new LocalCache(3), staticScopeReplaceExisting: true);
-        $cacheArray = new CacheArray();
+        $cacheStore1 = new CacheClient(new LocalCache(1));
+        $cacheStore2 = new CacheClient(new LocalCache(2));
+        $cacheStore3 = new CacheClient(new LocalCache(3));
+        $cacheArray = new CachePool("pool_three");
         $cacheArray->addServer($cacheStore3)
             ->addServer($cacheStore2)
             ->addServer($cacheStore1);
@@ -111,7 +111,7 @@ class CacheArrayTest extends \PHPUnit\Framework\TestCase
         $cacheArray->set("exampleModel", new SampleObjectA(1, "test", "test@test.com", new SampleObjectB("a", "b")));
 
         // Check in all
-        $bulkHave = $cacheArray->allHave("exampleModel");
+        $bulkHave = $cacheArray->haveInAll("exampleModel");
 
         $trueServers = [];
         $falseServers = [];

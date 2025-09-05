@@ -103,7 +103,7 @@ final readonly class CachedReferenceKey
     {
         $cacheArray = $storage instanceof CachePool ? $storage : [$storage];
         foreach ($cacheArray as $cache) {
-            if ($this->targetServerId && $cache->storageDriver->metaUniqueId() !== $this->targetServerId) {
+            if ($this->targetServerId && $cache->store->getId() !== $this->targetServerId) {
                 continue;
             }
 

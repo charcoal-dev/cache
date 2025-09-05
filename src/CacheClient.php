@@ -91,7 +91,7 @@ class CacheClient implements CacheClientInterface, EventStoreOwnerInterface
      */
     public function set(string $key, mixed $value, ?int $ttl = null, ?bool $withChecksum = null): bool|Bytes20
     {
-        $value = CachedEnvelope::Prepare($this, $key, $value, $createChecksum ?? $this->useChecksumsByDefault, $ttl);
+        $value = CachedEnvelope::Prepare($this, $key, $value, $withChecksum ?? $this->useChecksumsByDefault, $ttl);
         if ($value instanceof CachedEnvelope) {
             $checksum = $value->checksum;
             $value = CachedEnvelope::Seal($this, $value);
