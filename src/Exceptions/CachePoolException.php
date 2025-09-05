@@ -12,6 +12,6 @@ namespace Charcoal\Cache\Exceptions;
  * Class CacheArrayException
  * @package Charcoal\Cache\Exceptions
  */
-class CacheArrayException extends CacheException
+class CachePoolException extends CacheException
 {
 }

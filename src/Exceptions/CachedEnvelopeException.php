@@ -8,22 +8,21 @@ declare(strict_types=1);
 
 namespace Charcoal\Cache\Exceptions;
 
-use Charcoal\Buffers\Frames\Bytes20;
+use Charcoal\Buffers\Types\Bytes20;
 use Charcoal\Cache\Enums\CachedEntityError;
 
 /**
- * Class CachedEntityException
+ * Class CachedEnvelopeException
  * @package Charcoal\Cache\Exceptions
  */
-class CachedEntityException extends CacheException
+final class CachedEnvelopeException extends CacheException
 {
-    public ?Bytes20 $checksum1 = null;
-    public ?Bytes20 $checksum2 = null;
-
     public function __construct(
         public readonly CachedEntityError $error,
         string                            $msg = "",
-        ?\Throwable                       $previous = null
+        ?\Throwable                       $previous = null,
+        public readonly ?Bytes20          $checksum1 = null,
+        public readonly ?Bytes20          $checksum2 = null,
     )
     {
         parent::__construct($msg, $this->error->value, $previous);
@@ -34,11 +33,8 @@ class CachedEntityException extends CacheException
         ?Bytes20          $checksum1 = null,
         ?Bytes20          $checksum2 = null,
         ?\Throwable       $previous = null,
-    ): static
+    ): self
     {
-        $ex = new static($flag, "", $previous);
-        $ex->checksum1 = $checksum1;
-        $ex->checksum2 = $checksum2;
-        return $ex;
+        return new self($flag, "", $previous, $checksum1, $checksum2);
     }
 }
