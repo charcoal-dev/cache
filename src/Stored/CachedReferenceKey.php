@@ -10,12 +10,12 @@ namespace Charcoal\Cache\Stored;
 
 use Charcoal\Base\Encoding\Encoding;
 use Charcoal\Buffers\Types\Bytes20;
-use Charcoal\Cache\CacheArray;
 use Charcoal\Cache\CacheClient;
 use Charcoal\Cache\Enums\CachedEntityError;
 use Charcoal\Cache\Exceptions\CachedEntityException;
 use Charcoal\Cache\Exceptions\CacheDriverException;
 use Charcoal\Cache\Exceptions\CacheException;
+use Charcoal\Cache\Pool\CachePool;
 
 /**
  * Represents a cached reference key that facilitates the serialization and deserialization
@@ -34,7 +34,7 @@ final readonly class CachedReferenceKey
     ): string
     {
         if ($targetKeyServer) {
-            if ($targetKeyServer->storageDriver->metaUniqueId() === $cacheStore->storageDriver->metaUniqueId()) {
+            if ($targetKeyServer->store->getId() === $cacheStore->store->getId()) {
                 $targetKeyServer = null;
             }
         }
@@ -42,7 +42,7 @@ final readonly class CachedReferenceKey
         $reference = sprintf(
             "%s[%s][%s](%s)",
             $cacheStore->referenceKeysPrefix,
-            $targetKeyServer ? $targetKeyServer->storageDriver->metaUniqueId() : "~",
+            $targetKeyServer ? $targetKeyServer->store->getId() : "~",
             $targetKey,
             $checksum ? $checksum->encode(Encoding::Base16) : "*"
         );
@@ -99,9 +99,9 @@ final readonly class CachedReferenceKey
     /**
      * @throws CacheException
      */
-    public function resolve(CacheClient|CacheArray $storage): mixed
+    public function resolve(CacheClient|CachePool $storage): mixed
     {
-        $cacheArray = $storage instanceof CacheArray ? $storage : [$storage];
+        $cacheArray = $storage instanceof CachePool ? $storage : [$storage];
         foreach ($cacheArray as $cache) {
             if ($this->targetServerId && $cache->storageDriver->metaUniqueId() !== $this->targetServerId) {
                 continue;
